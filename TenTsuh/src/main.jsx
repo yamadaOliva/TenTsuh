@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <PersistGate loading={null} persistor={persistor}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={App} />
+          <Route path="/" element={<App/>} />
           <Route path="/login" element={<Login/>} />
         </Routes>
       </BrowserRouter>
