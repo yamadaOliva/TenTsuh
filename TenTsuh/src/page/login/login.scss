@@ -1,0 +1,14 @@
+.auth {
+  background-color: #f3f4f6;
+  background-image: url("bg.jpeg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .remember-me {
+    text-align: left !important;
+  }
+}

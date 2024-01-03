@@ -6,6 +6,8 @@ import App from "./App.jsx";
 import "./index.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Login from "./page/login/login.jsx";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
@@ -15,6 +17,18 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/" element={<App/>} />
           <Route path="/login" element={<Login/>} />
         </Routes>
+        <ToastContainer 
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </BrowserRouter>
     </PersistGate>
   </Provider>

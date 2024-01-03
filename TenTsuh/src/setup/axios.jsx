@@ -24,7 +24,8 @@ instance.interceptors.response.use(
         toast.error("Internal Server Error");
         break;
       default:
-        toast.error("Unknown Error");
+        
     }
   }
 );
+export default instance;
