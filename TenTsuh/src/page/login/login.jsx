@@ -11,13 +11,14 @@ import { login } from "../../service/auth.service";
 import Checkbox from "@mui/material/Checkbox";
 import "./login.scss";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { setRefreshToken, setAccessToken } from "../../redux/Slice/user-slice";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const dispatch = useDispatch();
   const setToken = (accessToken, refreshToken) => {
     dispatch(setAccessToken(accessToken));
@@ -25,19 +26,43 @@ export default function Login() {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (remember) {
+      localStorage.setItem("remember", true);
+      localStorage.setItem("email", email);
+      localStorage.setItem("password", password);
+    }else{
+      localStorage.setItem("remember", false);
+      localStorage.setItem("email", "");
+      localStorage.setItem("password", "");
+    }
     const res = await login(email, password);
 
     console.log(res);
     if (+res?.EC === 200) {
       setToken(res.data.access_token, res.data.refresh_token);
       toast.success("Đăng nhập thành công");
-      
     } else {
       toast.error("Đăng nhập thất bại");
       setPassword("");
       setEmail("");
     }
   };
+  //useEffect
+  useEffect(() => {
+    const remember = localStorage.getItem("remember") === "true";
+    if (remember) {
+      const storedEmail = localStorage.getItem("email") || "";
+      const storedPassword = localStorage.getItem("password") || "";
+      setRemember(true);
+      setEmail(storedEmail);
+      setPassword(storedPassword);
+    }
+  }, []);
+  useEffect(() => {
+    console.log(remember);
+    console.log(email);
+    console.log(password);
+  }, [remember, email, password]);
   //////////////////////////////////
   const paperStyle = {
     padding: 20,
@@ -71,6 +96,7 @@ export default function Login() {
               type="email"
               fullWidth
               required
+              value={email}
               style={textfieldStyle}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -80,13 +106,15 @@ export default function Login() {
               type="password"
               fullWidth
               required
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <Grid align="left">
               <FormControlLabel
-                control={<Checkbox name="checkedB" color="primary" />}
+                control={<Checkbox name="checkedB" color="primary" checked={remember}/>}
                 label="Ghi nhớ tôi"
                 style={formStyle}
+                onChange={(e) => setRemember(e.target.checked)}
               />
             </Grid>
 

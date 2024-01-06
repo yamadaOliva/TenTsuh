@@ -8,16 +8,18 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Login from "./page/login/login.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Register from "./page/register/register.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<App/>} />
-          <Route path="/login" element={<Login/>} />
+          <Route path="/" element={<App />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="register" element={<Register />} />
         </Routes>
-        <ToastContainer 
+        <ToastContainer
           position="top-right"
           autoClose={5000}
           hideProgressBar={false}
