@@ -3,6 +3,7 @@ import { getMajor } from "../../service/helper.service";
 import { useEffect, useState } from "react";
 import { useTheme } from "@mui/material";
 import { toast } from "react-toastify";
+import { register } from "../../service/auth.service";
 import axios from "axios";
 import {
   Avatar,
@@ -21,6 +22,9 @@ import {
   Select,
   Chip,
 } from "@material-ui/core";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { Link } from "react-router-dom";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -72,9 +76,19 @@ export default function Register() {
   const [classCount, setClassCount] = useState(1);
   const [classNumber, setClassNumber] = useState(1);
   const [province, setProvince] = useState([]);
-  const [currentProvince, setCurrentProvince] = useState({});
+  const [currentProvince, setCurrentProvince] = useState("");
   const [district, setDistrict] = useState([]);
   const [currentDistrict, setCurrentDistrict] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [reInputPassword, setReInputPassword] = useState("");
+  const [name, setName] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [phone, setPhone] = useState("");
+  const [liveIn, setLiveIn] = useState("");
+  const [gender, setGender] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [remember, setRemember] = useState(false);
   //useEffect
   useEffect(() => {
     const get = async () => {
@@ -88,11 +102,9 @@ export default function Register() {
         let ptr1 = await axios.get(
           `https://provinces.open-api.vn/api/p/${ptr.data[0].code}?depth=2`
         );
-        console.log(ptr1.data.districts);
         setProvince(ptr.data);
         setCurrentProvince(ptr.data[0]);
         setDistrict(ptr1.data.districts);
-        console.log(ptr1.data.districts[0]);
         setCurrentDistrict(ptr1.data.districts[0].name);
       } catch (error) {
         console.log(error);
@@ -106,7 +118,6 @@ export default function Register() {
         `https://provinces.open-api.vn/api/p/${id}?depth=2`
       );
       setDistrict(ptr.data.districts);
-      console.log(ptr.data.districts);
     } catch (error) {
       console.log(error);
     }
@@ -117,6 +128,7 @@ export default function Register() {
     height: "auto",
     width: 800,
   };
+  //handle
   const handleChange = (event) => {
     const {
       target: { value },
@@ -130,6 +142,78 @@ export default function Register() {
       // On autofill we get a stringified value.
       typeof value === "string" ? value.split(",") : value
     );
+  };
+  const validate = () => {
+    //check empty
+    console.log(remember);
+    if(!remember){
+      toast.error("Bạn chưa đồng ý với điều khoản sử dụng");
+      return false;
+    }
+    if (!email) {
+      toast.error("Email không được để trống");
+      return false;
+    }
+    if (!password) {
+      toast.error("Mật khẩu không được để trống");
+      return false;
+    }
+    if (!reInputPassword) {
+      toast.error("Nhập lại mật khẩu không được để trống");
+      return false;
+    }
+    if (!name) {
+      toast.error("Họ tên không được để trống");
+      return false;
+    }
+    if (!studentId) {
+      toast.error("Mã sinh viên không được để trống");
+      return false;
+    }
+    const regexMail = /^[a-zA-Z0-9]+@(?:[a-zA-Z0-9]+\.)+[A-Za-z]+$/;
+    const regexPhone = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+    if (!regexMail.test(email)) {
+      toast.error("Email không hợp lệ");
+      return false;
+    }
+    if (phone && !regexPhone.test(phone)) {
+      toast.error("Số điện thoại không hợp lệ");
+      return false;
+    }
+    if (password !== reInputPassword) {
+      toast.error("Mật khẩu không khớp");
+      return false;
+    }
+    if (password.length < 6) {
+      toast.error("Mật khẩu phải có ít nhất 6 kí tự");
+      return false;
+    }
+    return true;
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+    const data = {
+      email: email,
+      password: password,
+      studentId: studentId,
+      majorID: currentMajor.id,
+      class: currentMajor.acronym + " " + classNumber,
+      comeFrom: currentProvince.name + ", " + currentDistrict,
+      liveIn: liveIn,
+      gender: gender,
+      Birthday: birthday,
+      schoolYear: classCount,
+      interest: personName,
+      name: name,
+    };
+    console.log(data);
+    try {
+      const res = await register(data);
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
   };
   return (
     <>
@@ -161,14 +245,19 @@ export default function Register() {
                         placeholder="Nhập mã sinh viên"
                         fullWidth
                         required
+                        value={studentId}
+                        onChange={(e) => setStudentId(e.target.value)}
                       />
                     </Grid>
+
                     <Grid item xs={12}>
                       <TextField
                         label="Họ & Tên"
                         placeholder="Nhập tên"
                         fullWidth
                         required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                       />
                     </Grid>
                     <Grid item xs={6}>
@@ -181,14 +270,18 @@ export default function Register() {
                         SelectProps={{
                           native: true,
                         }}
-                        value={currentProvince.code || 0}
+                        value={currentProvince.code || 2}
                         onChange={(e) => {
-                          setCurrentProvince(province[e.target.value]);
+                          setCurrentProvince(
+                            province.filter(
+                              (i) => i.code === +e.target.value
+                            )[0]
+                          );
                           getDistrict(+e.target.value);
                         }}
                       >
                         {province.map((option) => (
-                          <option key={option.id} value={option.code}>
+                          <option key={option.code} value={option.code}>
                             {option.name}
                           </option>
                         ))}
@@ -207,6 +300,7 @@ export default function Register() {
                         value={currentDistrict}
                         onChange={(e) => {
                           console.log(e.target.value);
+                          console.log(currentProvince);
                           setCurrentDistrict(e.target.value);
                         }}
                       >
@@ -227,6 +321,8 @@ export default function Register() {
                         placeholder="Nhập email"
                         fullWidth
                         required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                       />
                     </Grid>
                     <Grid item xs={12}>
@@ -236,6 +332,8 @@ export default function Register() {
                         type="password"
                         fullWidth
                         required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                       />
                     </Grid>
                     <Grid item xs={12}>
@@ -245,13 +343,23 @@ export default function Register() {
                         type="password"
                         fullWidth
                         required
+                        value={reInputPassword}
+                        onChange={(e) => setReInputPassword(e.target.value)}
                       />
                     </Grid>
                     <Grid item xs={12}>
                       <FormControlLabel
-                        control={<Checkbox name="checkedB" color="primary" />}
+                        control={<Checkbox name="checkedB" color="primary" value={remember}/>}
                         label="Tôi đồng ý với điều khoản sử dụng"
+                        fullWidth
+                        onChange={(e) => setRemember(e.target.value)}
                       />
+                      <Typography fullWidth>
+                        Bạn đã có tài khoản?{" "}
+                        <Link to="/login" className="text-blue-600">
+                          Đăng nhập
+                        </Link>
+                      </Typography>
                     </Grid>
                   </Grid>
                 </Grid>
@@ -264,22 +372,19 @@ export default function Register() {
                         placeholder="Nhập số điện thoại"
                         fullWidth
                         required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Ngày sinh"
-                        placeholder="Nhập ngày sinh"
-                        fullWidth
-                        requiredS
-                      />
-                    </Grid>
+
                     <Grid item xs={12}>
                       <TextField
                         label="Địa chỉ"
                         placeholder="Nhập địa chỉ"
                         fullWidth
                         required
+                        value={liveIn}
+                        onChange={(e) => setLiveIn(e.target.value)}
                       />
                     </Grid>
                     <Grid item xs={12}>
@@ -292,9 +397,9 @@ export default function Register() {
                         SelectProps={{
                           native: true,
                         }}
-                        value={currentMajor?.id - 1 || 0}
+                        value={currentMajor?.id || 0}
                         onChange={(e) => {
-                          setCurrentMajor(major[e.target.value]);
+                          setCurrentMajor(major[e.target.value - 1]);
                           setClassNumber(1);
                           setClassCount(
                             major[e.target.value].classCount[0].schoolYear
@@ -364,10 +469,52 @@ export default function Register() {
                         })}
                       </TextField>
                     </Grid>
+                    {/*birthday*/}
+                    <Grid item xs={6}>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                          label="Ngày sinh"
+                          value={birthday}
+                          onChange={(newValue) => {
+                            setBirthday(newValue);
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              fullWidth
+                              style={{ paddingTop: "2px" }}
+                            />
+                          )}
+                        />
+                      </LocalizationProvider>
+                    </Grid>
+                    {/*gender*/}
+                    <Grid item xs={6}>
+                      <TextField
+                        label="Giới tính"
+                        placeholder="Nhập tên"
+                        fullWidth
+                        required
+                        select
+                        SelectProps={{
+                          native: true,
+                        }}
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        defaultValue="Nam"
+                      >
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                      </TextField>
+                    </Grid>
                     {/*interest*/}
                     <Grid item xs={12} fullWidth>
                       <FormControl sx={{ m: 1, width: 300 }} fullWidth>
-                        <InputLabel id="demo-multiple-chip-label">
+                        <InputLabel
+                          id="demo-multiple-chip-label"
+                          className="px-2"
+                        >
                           Sở thích
                         </InputLabel>
                         <Select
@@ -414,7 +561,12 @@ export default function Register() {
               </Grid>
               <Grid align="center" className="mt-4">
                 {" "}
-                <Button type="submit" color="primary" variant="contained">
+                <Button
+                  type="submit"
+                  color="primary"
+                  variant="contained"
+                  onClick={handleSubmit}
+                >
                   Đăng ký
                 </Button>
               </Grid>
