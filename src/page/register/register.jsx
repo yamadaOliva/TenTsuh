@@ -25,6 +25,7 @@ import {
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -89,6 +90,7 @@ export default function Register() {
   const [gender, setGender] = useState("");
   const [birthday, setBirthday] = useState("");
   const [remember, setRemember] = useState(false);
+  const navigate = useNavigate();
   //useEffect
   useEffect(() => {
     const get = async () => {
@@ -210,7 +212,10 @@ export default function Register() {
     console.log(data);
     try {
       const res = await register(data);
-      console.log(res);
+      if (+res?.EC === 200) {
+        toast.success("Đăng ký thành công");
+        navigate("/login");
+      }
     } catch (error) {
       console.log(error);
     }

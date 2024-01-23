@@ -15,15 +15,19 @@ import { useEffect, useState } from "react";
 import { setRefreshToken, setAccessToken } from "../../redux/Slice/user-slice";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const accessToken = useSelector((state) => state.user.accessToken);
   const dispatch = useDispatch();
   const setToken = (accessToken, refreshToken) => {
     dispatch(setAccessToken(accessToken));
     dispatch(setRefreshToken(refreshToken));
   };
+  const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (remember) {
@@ -40,6 +44,9 @@ export default function Login() {
     console.log(res);
     if (+res?.EC === 200) {
       setToken(res.data.access_token, res.data.refresh_token);
+      setPassword("");
+      setEmail("");
+      navigate("/home");
       toast.success("Đăng nhập thành công");
     } else {
       toast.error("Đăng nhập thất bại");
@@ -49,6 +56,10 @@ export default function Login() {
   };
   //useEffect
   useEffect(() => {
+    if (accessToken) {
+      navigate("/home");
+      return;
+    } 
     const remember = localStorage.getItem("remember") === "true";
     if (remember) {
       const storedEmail = localStorage.getItem("email") || "";
@@ -58,11 +69,7 @@ export default function Login() {
       setPassword(storedPassword);
     }
   }, []);
-  useEffect(() => {
-    console.log(remember);
-    console.log(email);
-    console.log(password);
-  }, [remember, email, password]);
+  
   //////////////////////////////////
   const paperStyle = {
     padding: 20,

@@ -9,4 +9,9 @@ const login = (email, password) => {
 const register = (data) => {
   return axios.post("/auth/register", data);
 };
-export { login, register };
+const refreshToken = (refresh_token) => {
+  return axios.post("/auth/refresh-token", {
+    refresh_token: refresh_token,
+  });
+};
+export { login, register, refreshToken };
