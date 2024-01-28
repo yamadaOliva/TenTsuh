@@ -138,79 +138,77 @@ export default function Header({ data }) {
   );
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="sticky">
-        <Toolbar>
-          <IconButton color="inherit" sx={{ marginRight: 2 }}>
-            <Avatar src="iconHust.png"></Avatar>
-          </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ display: { xs: "none", sm: "block" } }}
-          >
-            TenTsuh
+    <AppBar position="sticky">
+      <Toolbar>
+        <IconButton color="inherit" sx={{ marginRight: 2 }}>
+          <Avatar src="iconHust.png"></Avatar>
+        </IconButton>
+        <Typography
+          variant="h6"
+          noWrap
+          component="div"
+          sx={{ display: { xs: "none", sm: "block" } }}
+        >
+          TenTsuh
+        </Typography>
+        <Search>
+          <SearchIconWrapper>
+            <SearchIcon />
+          </SearchIconWrapper>
+          <StyledInputBase
+            placeholder="Tìm kiếm trên TenTsuh..."
+            inputProps={{ "aria-label": "search" }}
+          />
+        </Search>
+        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ display: { xs: "none", md: "flex" } }}>
+          <Typography variant="body1" sx={{ margin: 2 }}>
+            Xin chào {data.name}
           </Typography>
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Tìm kiếm trên TenTsuh..."
-              inputProps={{ "aria-label": "search" }}
-            />
-          </Search>
-          <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: { xs: "none", md: "flex" } }}>
-            <Typography variant="body1" sx={{ margin: 2 }}>
-              Xin chào {data.name}
-            </Typography>
-            <IconButton
-              size="large"
-              aria-label="show 4 new mails"
-              color="inherit"
-            >
-              <Badge badgeContent={4} color="error">
-                <MailIcon />
-              </Badge>
-            </IconButton>
-            <IconButton
-              size="large"
-              aria-label="show 17 new notifications"
-              color="inherit"
-            >
-              <Badge badgeContent={17} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-          </Box>
+          <IconButton
+            size="large"
+            aria-label="show 4 new mails"
+            color="inherit"
+          >
+            <Badge badgeContent={4} color="error">
+              <MailIcon />
+            </Badge>
+          </IconButton>
+          <IconButton
+            size="large"
+            aria-label="show 17 new notifications"
+            color="inherit"
+          >
+            <Badge badgeContent={17} color="error">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+        </Box>
 
-          {data && (
-            <>
-              <IconButton
-                color="inherit"
-                onClick={handleMenuClick}
-                sx={{ marginRight: 2 }}
-              >
-                <Avatar alt="User Avatar" src={data.avatarUrl} />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-              >
-                <MenuItem onClick={handleProfileClick}>
-                  Thông tin cá nhân
-                </MenuItem>
-                <MenuItem onClick={handleLogoutClick}>Đăng xuất</MenuItem>
-              </Menu>
-            </>
-          )}
-        </Toolbar>
-      </AppBar>
+        {data && (
+          <>
+            <IconButton
+              color="inherit"
+              onClick={handleMenuClick}
+              sx={{ marginRight: 2 }}
+            >
+              <Avatar alt="User Avatar" src={data.avatarUrl} />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+            >
+              <MenuItem onClick={handleProfileClick}>
+                Thông tin cá nhân
+              </MenuItem>
+              <MenuItem onClick={handleLogoutClick}>Đăng xuất</MenuItem>
+            </Menu>
+          </>
+        )}
+      </Toolbar>
       {renderMobileMenu}
-    </Box>
+    </AppBar>
   );
 }
 Header.propTypes = {

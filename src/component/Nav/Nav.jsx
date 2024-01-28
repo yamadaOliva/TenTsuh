@@ -5,8 +5,7 @@ import {
   Home,
   ModeNight,
   Person,
-  Settings,
-  Storefront,
+  Message,
 } from "@mui/icons-material";
 import {
   Box,
@@ -17,8 +16,10 @@ import {
   ListItemText,
   Switch,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 const Nav = ({ mode, setMode }) => {
+  const navigate = useNavigate();
   return (
     <Box flex={1} p={2} sx={{ display: { xs: "none", sm: "block" } }}>
       <Box position="fixed">
@@ -32,7 +33,13 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
+            <ListItemButton
+              component="a"
+              href="#simple-list"
+              onClick={() => {
+                navigate("/message");
+              }}
+            >
               <ListItemIcon>
                 <Article />
               </ListItemIcon>
@@ -44,31 +51,30 @@ const Nav = ({ mode, setMode }) => {
               <ListItemIcon>
                 <Group />
               </ListItemIcon>
-              <ListItemText primary="Groups" />
+              <ListItemText primary="Hội nhóm" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
+            <ListItemButton
+              component="a"
+              href="#simple-list"
+              onClick={() => {
+                navigate("/message");
+              }}
+            >
               <ListItemIcon>
-                <Storefront />
+                <Message />
               </ListItemIcon>
-              <ListItemText primary="Marketplace" />
+              <ListItemText primary="Tin nhắn" />
             </ListItemButton>
           </ListItem>
+
           <ListItem disablePadding>
             <ListItemButton component="a" href="#simple-list">
               <ListItemIcon>
                 <Person />
               </ListItemIcon>
-              <ListItemText primary="Friends" />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
-              <ListItemIcon>
-                <Settings />
-              </ListItemIcon>
-              <ListItemText primary="Settings" />
+              <ListItemText primary="Bạn bè" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
@@ -76,7 +82,7 @@ const Nav = ({ mode, setMode }) => {
               <ListItemIcon>
                 <AccountBox />
               </ListItemIcon>
-              <ListItemText primary="Profile" />
+              <ListItemText primary="Tường nhà" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>

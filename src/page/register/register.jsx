@@ -87,7 +87,7 @@ export default function Register() {
   const [studentId, setStudentId] = useState("");
   const [phone, setPhone] = useState("");
   const [liveIn, setLiveIn] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender, setGender] = useState("Nam");
   const [birthday, setBirthday] = useState("");
   const [remember, setRemember] = useState(false);
   const navigate = useNavigate();
@@ -199,7 +199,7 @@ export default function Register() {
       email: email,
       password: password,
       studentId: studentId,
-      majorID: currentMajor.id,
+      majorId: currentMajor.id,
       class: currentMajor.acronym + " " + classNumber,
       comeFrom: currentProvince.name + ", " + currentDistrict,
       liveIn: liveIn,

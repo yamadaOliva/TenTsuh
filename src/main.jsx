@@ -11,6 +11,7 @@ import Login from "./page/login/login.jsx";
 import App from "./App.jsx";
 import Register from "./page/register/register.jsx";
 import Home from "./page/home/home.jsx";
+import Message from "./page/message/message.jsx";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="message" element={<Message />} />
         </Routes>
         <ToastContainer
           position="top-right"

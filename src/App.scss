@@ -1,10 +1,16 @@
 .body__container {
+  padding: 0px !important;
+  .MuiBox-root {
     padding: 0px !important;
-    .MuiBox-root {
-        padding: 0px !important;
-    }
+  }
 }
-header{
-    padding: 0px !important;
-    position: sticky !important;
+header {
+  padding: 0px !important;
+  position: sticky !important;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }

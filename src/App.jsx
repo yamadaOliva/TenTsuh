@@ -41,10 +41,10 @@ function App() {
   }, []);
   return (
     <>
-      <header>
+      
         {" "}
-        <Header data={data} className="header" />
-      </header>
+        <Header data={data} />
+     
 
       <section className="body__container">
         <Outlet />
