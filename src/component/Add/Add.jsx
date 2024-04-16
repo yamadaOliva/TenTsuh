@@ -10,7 +10,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Add as AddIcon,
   DateRange,
@@ -20,7 +20,8 @@ import {
   VideoCameraBack,
 } from "@mui/icons-material";
 import { Box } from "@mui/system";
-
+import { getMe } from "../../service/user.service";
+import { useSelector } from "react-redux";
 const SytledModal = styled(Modal)({
   display: "flex",
   alignItems: "center",
@@ -36,6 +37,17 @@ const UserBox = styled(Box)({
 
 const Add = () => {
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const accessToken = useSelector((state) => state.user.accessToken);
+  useEffect(() => {
+    const fetchMe = async () => {
+      const res = await getMe(accessToken);
+      if (res?.EC === 200) {
+        setUser(res.data);
+      }
+    };
+    if(open) fetchMe();
+  }, [open]);
   return (
     <>
       <Tooltip
@@ -59,31 +71,41 @@ const Add = () => {
       >
         <Box
           width={400}
-          height={280}
+          height= "auto"
           bgcolor={"background.default"}
           color={"text.primary"}
           p={3}
           borderRadius={5}
         >
           <Typography variant="h6" color="gray" textAlign="center">
-            Create post
+            Tạo bài đăng
           </Typography>
           <UserBox>
             <Avatar
-              src="https://images.pexels.com/photos/846741/pexels-photo-846741.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+              src={user?.avatar}
               sx={{ width: 30, height: 30 }}
             />
             <Typography fontWeight={500} variant="span">
-              John Doe
+              {user?.name}
             </Typography>
           </UserBox>
+          {/* title */}
+          <TextField  
+            sx={{ width: "100%" }}
+            id="standard-multiline-static"
+            multiline
+            rows={1}
+            placeholder="Tiêu đề"
+            variant="standard"
+          />
           <TextField
             sx={{ width: "100%" }}
             id="standard-multiline-static"
             multiline
-            rows={3}
-            placeholder="What's on your mind?"
+            placeholder="Bạn đang nghĩ gì?"
             variant="standard"
+            rows={4}
+            maxRows={10}
           />
           <Stack direction="row" gap={1} mt={2} mb={3}>
             <EmojiEmotions color="primary" />

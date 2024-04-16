@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useTheme } from "@mui/material";
 import { toast } from "react-toastify";
 import { register } from "../../service/auth.service";
-import axios from "axios";
 import {
   Avatar,
   Grid,
@@ -26,6 +25,7 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { address } from "../../utils";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -100,30 +100,32 @@ export default function Register() {
         setCurrentMajor(res.data[1]);
         setClassCount(res.data[1].classCount[0].schoolYear);
         setClassNumber(res.data[1].classCount[0].count);
-        let ptr = await axios.get("https://provinces.open-api.vn/api/");
-        let ptr1 = await axios.get(
-          `https://provinces.open-api.vn/api/p/${ptr.data[0].code}?depth=2`
-        );
-        setProvince(ptr.data);
-        setCurrentProvince(ptr.data[0]);
-        setDistrict(ptr1.data.districts);
-        setCurrentDistrict(ptr1.data.districts[0].name);
+        let ptr = address.getCities();
+        setProvince(ptr);
+        setCurrentProvince(ptr[0]);
+        let ptr1 = address.getDistricts(ptr[0]);
+        setDistrict(ptr1);
+        setCurrentDistrict(ptr1[0]);
       } catch (error) {
         console.log(error);
       }
     };
     get();
   }, []);
-  const getDistrict = async (id) => {
+  
+  const getDistrict1 = () => {
     try {
-      let ptr = await axios.get(
-        `https://provinces.open-api.vn/api/p/${id}?depth=2`
-      );
-      setDistrict(ptr.data.districts);
+      let ptr = address.getDistricts(currentProvince);
+      console.log(ptr);
+      console.log(currentProvince);
+      setDistrict(ptr);
     } catch (error) {
       console.log(error);
     }
   };
+  useEffect(() => {
+    getDistrict1();
+  }, [currentProvince]);
   //style
   const paperStyle = {
     padding: 20,
@@ -201,7 +203,7 @@ export default function Register() {
       studentId: studentId,
       majorId: currentMajor.id,
       class: currentMajor.acronym + " " + classNumber,
-      comeFrom: currentProvince.name + ", " + currentDistrict,
+      comeFrom: currentProvince + ", " + currentDistrict,
       liveIn: liveIn,
       gender: gender,
       Birthday: birthday,
@@ -212,7 +214,7 @@ export default function Register() {
     console.log(data);
     try {
       const res = await register(data);
-      if (+res?.EC === 200) {
+      if (+res?.EC === 201) {
         toast.success("Đăng ký thành công");
         navigate("/login");
       }
@@ -275,19 +277,17 @@ export default function Register() {
                         SelectProps={{
                           native: true,
                         }}
-                        value={currentProvince.code || 2}
+                        value={currentProvince}
                         onChange={(e) => {
                           setCurrentProvince(
-                            province.filter(
-                              (i) => i.code === +e.target.value
-                            )[0]
+                            e.target.value
                           );
-                          getDistrict(+e.target.value);
+                          
                         }}
                       >
-                        {province.map((option) => (
-                          <option key={option.code} value={option.code}>
-                            {option.name}
+                        {province.map((option , index) => (
+                          <option key={index} value={option}>
+                            {option}
                           </option>
                         ))}
                       </TextField>
@@ -304,16 +304,14 @@ export default function Register() {
                         }}
                         value={currentDistrict}
                         onChange={(e) => {
-                          console.log(e.target.value);
-                          console.log(currentProvince);
                           setCurrentDistrict(e.target.value);
                         }}
                       >
                         {district?.length > 0 &&
-                          district.map((option) => {
+                          district.map((option , index) => {
                             return (
-                              <option key={option.id} value={option.name}>
-                                {option.name}
+                              <option key={index} value={option}>
+                                {option}
                               </option>
                             );
                           })}

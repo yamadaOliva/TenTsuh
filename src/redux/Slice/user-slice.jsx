@@ -13,7 +13,11 @@ export const userSlice = createSlice({
     setRefreshToken: (state, action) => {
       state.refreshToken = action.payload;
     },
+    logout: (state) => {
+      state.accessToken = null;
+      state.refreshToken = null;
+    },
   },
 });
-export const { setAccessToken, setRefreshToken } = userSlice.actions;
+export const { setAccessToken, setRefreshToken , logout } = userSlice.actions;
 export const selectAccessToken = (state) => state.user.accessToken;

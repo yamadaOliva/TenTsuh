@@ -47,7 +47,7 @@ function App() {
      
 
       <section className="body__container">
-        <Outlet />
+        <Outlet data ={data} />
       </section>
     </>
   );

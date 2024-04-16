@@ -15,6 +15,9 @@ import MailIcon from "@mui/icons-material/Mail";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Avatar from "@mui/material/Avatar";
 import PropTypes from "prop-types";
+import { useDispatch } from "react-redux";
+import { logout } from "../../redux/Slice/user-slice";
+import  {useNavigate} from "react-router-dom";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -57,6 +60,9 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Header({ data }) {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -82,7 +88,8 @@ export default function Header({ data }) {
 
   const handleLogoutClick = () => {
     handleClose();
-    // Thêm các hành động cần thiết khi chọn lựa chọn đăng xuất
+    dispatch(logout());
+    navigate("/login");
   };
 
   const mobileMenuId = "primary-search-account-menu-mobile";
