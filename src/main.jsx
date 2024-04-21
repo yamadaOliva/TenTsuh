@@ -12,6 +12,30 @@ import App from "./App.jsx";
 import Register from "./page/register/register.jsx";
 import Home from "./page/home/home.jsx";
 import Message from "./page/message/message.jsx";
+import Profile from "./page/profile/profile.jsx";
+//Azure
+import { PublicClientApplication, EventType } from "@azure/msal-browser";
+import { msalConfig } from "./setup/auth-config.jsx";
+
+const msalInstance = new PublicClientApplication(msalConfig);
+
+if (
+  !msalInstance.getActiveAccount() &&
+  msalInstance.getAllAccounts().length > 0
+) {
+  msalInstance.setActiveAccount(msalInstance.getAllAccounts()[0]);
+}
+
+msalInstance.addEventCallback((message) => {
+  if (
+    message.eventType === EventType.LOGIN_SUCCESS &&
+    message.payload.account
+  ) {
+    const account = message.payload.account;
+    msalInstance.setActiveAccount(account);
+  }
+});
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
@@ -20,9 +44,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/" element={<App />}>
             <Route path="home" element={<Home />} />
           </Route>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />
           <Route path="message" element={<Message />} />
+          <Route path="profile" element={<Profile />} />
         </Routes>
         <ToastContainer
           position="top-right"

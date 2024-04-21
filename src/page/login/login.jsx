@@ -17,16 +17,52 @@ import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-export default function Login() {
+//Azure
+import {
+  AuthenticatedTemplate,
+  UnauthenticatedTemplate,
+  useMsal,
+  MsalProvider,
+} from "@azure/msal-react";
+import { loginRequest } from "../../setup/auth-config";
+
+const WrappedView = () => {
+  const { instance } = useMsal();
+  const activeAccount = instance.getActiveAccount();
+
+  const handleLogin = () => {
+    instance
+      .loginRedirect({
+        ...loginRequest,
+        prompt: "create",
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+  };
+  return (
+    <div>
+      <AuthenticatedTemplate>
+        <h2>Welcome {activeAccount?.name}</h2>
+      </AuthenticatedTemplate>
+      <UnauthenticatedTemplate>
+        <Button onClick={handleLogin}>Login</Button>
+      </UnauthenticatedTemplate>
+    </div>
+  );
+};
+// eslint-disable-next-line react/prop-types
+export default function Login({instance}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const accessToken = useSelector((state) => state.user.accessToken);
   const dispatch = useDispatch();
-  const setToken = (accessToken, refreshToken) => {
+
+  function setToken(accessToken, refreshToken) {
     dispatch(setAccessToken(accessToken));
     dispatch(setRefreshToken(refreshToken));
-  };
+  }
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +70,7 @@ export default function Login() {
       localStorage.setItem("remember", true);
       localStorage.setItem("email", email);
       localStorage.setItem("password", password);
-    }else{
+    } else {
       localStorage.setItem("remember", false);
       localStorage.setItem("email", "");
       localStorage.setItem("password", "");
@@ -59,7 +95,7 @@ export default function Login() {
     if (accessToken) {
       navigate("/home");
       return;
-    } 
+    }
     const remember = localStorage.getItem("remember") === "true";
     if (remember) {
       const storedEmail = localStorage.getItem("email") || "";
@@ -69,7 +105,7 @@ export default function Login() {
       setPassword(storedPassword);
     }
   }, []);
-  
+
   //////////////////////////////////
   const paperStyle = {
     padding: 20,
@@ -118,7 +154,13 @@ export default function Login() {
             />
             <Grid align="left">
               <FormControlLabel
-                control={<Checkbox name="checkedB" color="primary" checked={remember}/>}
+                control={
+                  <Checkbox
+                    name="checkedB"
+                    color="primary"
+                    checked={remember}
+                  />
+                }
                 label="Ghi nhớ tôi"
                 style={formStyle}
                 onChange={(e) => setRemember(e.target.checked)}
@@ -135,6 +177,12 @@ export default function Login() {
             >
               Đăng nhập
             </Button>
+
+              {/* Azure */}
+              <MsalProvider instance={instance}>
+                <WrappedView />
+              </MsalProvider>
+
             <Grid align="left">
               <Typography fullWidth style={typoStyle}>
                 <Link to="/forgot-password" className="text-blue-600">

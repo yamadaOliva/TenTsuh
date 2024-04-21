@@ -1,0 +1,15 @@
+.upload-button {
+    max-width: 300px;
+    margin: 0 auto;
+    display: block;
+    padding: 10px;
+    background: #fff;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    img {
+      width: 100%;
+      height: 300px !important;
+      object-fit: cover;
+    }
+  }

@@ -214,7 +214,8 @@ export default function Register() {
     console.log(data);
     try {
       const res = await register(data);
-      if (+res?.EC === 201) {
+      console.log(res);
+      if (+res?.EC === 200) {
         toast.success("Đăng ký thành công");
         navigate("/login");
       }
