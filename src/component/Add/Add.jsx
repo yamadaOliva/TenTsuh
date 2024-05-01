@@ -38,6 +38,7 @@ const UserBox = styled(Box)({
 const Add = () => {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [image, setImage] = useState("");
   const accessToken = useSelector((state) => state.user.accessToken);
   useEffect(() => {
     const fetchMe = async () => {
@@ -46,7 +47,7 @@ const Add = () => {
         setUser(res.data);
       }
     };
-    if(open) fetchMe();
+    if (open) fetchMe();
   }, [open]);
   return (
     <>
@@ -71,7 +72,7 @@ const Add = () => {
       >
         <Box
           width={400}
-          height= "auto"
+          height="auto"
           bgcolor={"background.default"}
           color={"text.primary"}
           p={3}
@@ -81,28 +82,25 @@ const Add = () => {
             Tạo bài đăng
           </Typography>
           <UserBox>
-            <Avatar
-              src={user?.avatar}
-              sx={{ width: 30, height: 30 }}
-            />
+            <Avatar src={user?.avatar} sx={{ width: 30, height: 30 }} />
             <Typography fontWeight={500} variant="span">
               {user?.name}
             </Typography>
           </UserBox>
           {/* title */}
-          <TextField  
+          <TextField
             sx={{ width: "100%" }}
             id="standard-multiline-static"
             multiline
             rows={1}
-            placeholder="Tiêu đề"
+            placeholder="Bạn đang cảm thấy thế nào"
             variant="standard"
           />
           <TextField
             sx={{ width: "100%" }}
             id="standard-multiline-static"
             multiline
-            placeholder="Bạn đang nghĩ gì?"
+            placeholder="Nội dung"
             variant="standard"
             rows={4}
             maxRows={10}
@@ -118,7 +116,7 @@ const Add = () => {
             variant="contained"
             aria-label="outlined primary button group"
           >
-            <Button>Post</Button>
+            <Button>Đăng</Button>
             <Button sx={{ width: "100px" }}>
               <DateRange />
             </Button>

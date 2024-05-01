@@ -43,11 +43,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Routes>
           <Route path="/" element={<App />}>
             <Route path="home" element={<Home />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
           <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />
           <Route path="message" element={<Message />} />
-          <Route path="profile" element={<Profile />} />
+          
         </Routes>
         <ToastContainer
           position="top-right"

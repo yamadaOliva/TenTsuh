@@ -18,6 +18,8 @@ import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/Slice/user-slice";
 import  {useNavigate} from "react-router-dom";
+import User from "@mui/icons-material/People";
+import { People } from "@material-ui/icons";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -82,8 +84,9 @@ export default function Header({ data }) {
   };
 
   const handleProfileClick = () => {
+    //go to profile
+    navigate("/profile")
     handleClose();
-    // Thêm các hành động cần thiết khi chọn lựa chọn thông tin cá nhân
   };
 
   const handleLogoutClick = () => {
@@ -172,6 +175,15 @@ export default function Header({ data }) {
           <Typography variant="body1" sx={{ margin: 2 }}>
             Xin chào {data.name}
           </Typography>
+          <IconButton
+            size="large"
+            aria-label="show 17 new notifications"
+            color="inherit"
+          >
+            <Badge badgeContent={10} color="error">
+              <People />
+            </Badge>
+          </IconButton>
           <IconButton
             size="large"
             aria-label="show 4 new mails"

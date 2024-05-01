@@ -15,5 +15,8 @@ const refreshToken = (refresh_token) => {
   });
 };
 
+const login365 = (data) => {
+  return axios.post("/auth/office365", data);
+};
 
-export { login, register, refreshToken };
+export { login, register, refreshToken, login365 };

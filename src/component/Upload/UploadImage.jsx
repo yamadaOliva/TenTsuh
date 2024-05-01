@@ -14,12 +14,21 @@ export default function Upload(props) {
       {
         cloudName: "subarasuy",
         uploadPreset: "o4umo4il",
+        multiple: false,
+        sources: ["local", "url", "camera"],
+        maxFileSize: 5000000,
       },
       function (error, result) {
-        console.log(result.info.secure_url);
-        console.log(result?.info?.secure_url?.startsWith("http"));
-        if (result.info?.secure_url?.startsWith("http")) {
-          setCurrentImage(result.info.secure_url);
+        if (!error && result && result.event === "success") {
+          const fileExtension = result.info.format;
+          if (fileExtension !== "png" && fileExtension !== "jpg") {
+            
+            return;
+          }
+          console.log(result.info.secure_url);
+          if (result.info?.secure_url?.startsWith("http")) {
+            setCurrentImage(result.info.secure_url);
+          }
         }
       }
     );

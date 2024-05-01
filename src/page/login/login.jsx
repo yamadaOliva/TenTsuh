@@ -7,7 +7,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import { login } from "../../service/auth.service";
+import { login ,login365} from "../../service/auth.service";
 import Checkbox from "@mui/material/Checkbox";
 import "./login.scss";
 import { Link } from "react-router-dom";
@@ -19,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 //Azure
 import {
-  AuthenticatedTemplate,
   UnauthenticatedTemplate,
   useMsal,
   MsalProvider,
@@ -27,9 +26,34 @@ import {
 import { loginRequest } from "../../setup/auth-config";
 
 const WrappedView = () => {
+  const dispatch = useDispatch();
   const { instance } = useMsal();
   const activeAccount = instance.getActiveAccount();
 
+  const navigate = useNavigate();
+  function setToken(accessToken, refreshToken) {
+    dispatch(setAccessToken(accessToken));
+    dispatch(setRefreshToken(refreshToken));
+  }
+
+  useEffect(() => {
+    const loginOffice = async (data) => {
+      const res = await login365(data);
+      console.log(res.data);
+      setToken(res.data.access_token, res.data.refresh_token);
+      navigate("/home");
+      toast.success("Đăng nhập thành công");
+      
+    };
+    if (activeAccount) {
+      console.log(activeAccount);
+      const data = {
+        email: activeAccount.username,
+        name: activeAccount.name,
+      }
+      loginOffice(data);
+    }
+  }, [activeAccount]);
   const handleLogin = () => {
     instance
       .loginRedirect({
@@ -42,11 +66,13 @@ const WrappedView = () => {
   };
   return (
     <div>
-      <AuthenticatedTemplate>
-        <h2>Welcome {activeAccount?.name}</h2>
-      </AuthenticatedTemplate>
       <UnauthenticatedTemplate>
-        <Button onClick={handleLogin}>Login</Button>
+        <Button 
+          color = "default"
+          size="large"
+          variant="outlined"
+        onClick={handleLogin}>đăng nhập với 365 office
+        </Button>
       </UnauthenticatedTemplate>
     </div>
   );

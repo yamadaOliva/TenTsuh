@@ -5,4 +5,10 @@ const getMe = (access_token) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
   return axios.get("/user/me");
 };
-export { getMe };
+
+const getProfile = (access_token) => {
+  //set header
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.get("/user/profile");
+};
+export { getMe , getProfile };
