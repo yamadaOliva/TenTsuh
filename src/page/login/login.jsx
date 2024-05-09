@@ -7,7 +7,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import { login ,login365} from "../../service/auth.service";
+import { login, login365 } from "../../service/auth.service";
 import Checkbox from "@mui/material/Checkbox";
 import "./login.scss";
 import { Link } from "react-router-dom";
@@ -41,18 +41,31 @@ const WrappedView = () => {
       const res = await login365(data);
       console.log(res.data);
       setToken(res.data.access_token, res.data.refresh_token);
+      localStorage.setItem("IsLogin", true);
       navigate("/home");
       toast.success("Đăng nhập thành công");
-      
     };
-    if (activeAccount) {
+
+    const Logout = localStorage.getItem("Logout");
+    if (Logout) {
+      localStorage.removeItem("IsLogin");
+      localStorage.removeItem("Logout");
+      instance.logout();
+      return;
+    }
+
+    const IsLogin = localStorage.getItem("IsLogin");
+    if (activeAccount && !IsLogin ) {
       console.log(activeAccount);
       const data = {
         email: activeAccount.username,
         name: activeAccount.name,
-      }
+      };
+    
       loginOffice(data);
-    }
+
+    } 
+   
   }, [activeAccount]);
   const handleLogin = () => {
     instance
@@ -67,18 +80,21 @@ const WrappedView = () => {
   return (
     <div>
       <UnauthenticatedTemplate>
-        <Button 
-          color = "default"
+        <Button
+          color="default"
           size="large"
           variant="outlined"
-        onClick={handleLogin}>đăng nhập với 365 office
+          onClick={handleLogin}
+        >
+          đăng nhập với 365 office
         </Button>
       </UnauthenticatedTemplate>
     </div>
   );
 };
+
 // eslint-disable-next-line react/prop-types
-export default function Login({instance}) {
+export default function Login({ instance }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -204,10 +220,10 @@ export default function Login({instance}) {
               Đăng nhập
             </Button>
 
-              {/* Azure */}
-              <MsalProvider instance={instance}>
-                <WrappedView />
-              </MsalProvider>
+            {/* Azure */}
+            <MsalProvider instance={instance}>
+              <WrappedView />
+            </MsalProvider>
 
             <Grid align="left">
               <Typography fullWidth style={typoStyle}>

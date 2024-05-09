@@ -101,6 +101,7 @@ export default function Register() {
         setClassCount(res.data[1].classCount[0].schoolYear);
         setClassNumber(res.data[1].classCount[0].count);
         let ptr = address.getCities();
+        console.log("dsfsdfsdfsf",ptr);
         setProvince(ptr);
         setCurrentProvince(ptr[0]);
         let ptr1 = address.getDistricts(ptr[0]);
@@ -113,6 +114,10 @@ export default function Register() {
     get();
   }, []);
   
+  useEffect(() => {
+    console.log(birthday);
+  }, [birthday]);
+
   const getDistrict1 = () => {
     try {
       let ptr = address.getDistricts(currentProvince);
@@ -203,13 +208,15 @@ export default function Register() {
       studentId: studentId,
       majorId: currentMajor.id,
       class: currentMajor.acronym + " " + classNumber,
-      comeFrom: currentProvince + ", " + currentDistrict,
+      city: currentProvince,
+      district: currentDistrict,
       liveIn: liveIn,
       gender: gender,
       Birthday: birthday,
       schoolYear: classCount,
       interest: personName,
       name: name,
+      phone: phone,
     };
     console.log(data);
     try {

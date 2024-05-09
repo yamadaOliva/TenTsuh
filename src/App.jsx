@@ -33,6 +33,7 @@ function App() {
         } else {
           setToken("", "");
           navigate("/login");
+          localStorage.setItem("Logout", true);
           toast.error("Phiên đăng nhập hết hạn");
         }
       }

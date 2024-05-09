@@ -1,7 +1,6 @@
 import data from "../assets/data/data.json";
 class Address {
     getCities() {
-        console.log(data.map((item) => item.Name));
         return data.map((item) => item.Name);
     }
     getDistricts(city) {

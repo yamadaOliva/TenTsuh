@@ -17,9 +17,10 @@ import Avatar from "@mui/material/Avatar";
 import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/Slice/user-slice";
-import  {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import User from "@mui/icons-material/People";
 import { People } from "@material-ui/icons";
+import { useMsal } from "@azure/msal-react";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -65,6 +66,7 @@ export default function Header({ data }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -85,13 +87,17 @@ export default function Header({ data }) {
 
   const handleProfileClick = () => {
     //go to profile
-    navigate("/profile")
+    navigate("/profile");
     handleClose();
   };
 
   const handleLogoutClick = () => {
     handleClose();
     dispatch(logout());
+    const IsLogin = localStorage.getItem("IsLogin");
+    if (IsLogin) {
+      localStorage.setItem("Logout", true);
+    }
     navigate("/login");
   };
 

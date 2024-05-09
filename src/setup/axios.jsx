@@ -12,7 +12,7 @@ instance.interceptors.response.use(
     const status = error.response ? error.response.status : 500;
     switch (status) {
       case 401:
-        toast.error("Unauthorized");
+        
         break;
       case 403:
         toast.error("Forbidden");
