@@ -35,7 +35,6 @@ const Nav = ({ mode, setMode }) => {
           <ListItem disablePadding>
             <ListItemButton
               component="a"
-              href="#simple-list"
               onClick={() => {
                 navigate("/message");
               }}
@@ -47,7 +46,7 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
+            <ListItemButton component="a" >
               <ListItemIcon>
                 <Group />
               </ListItemIcon>
@@ -57,7 +56,7 @@ const Nav = ({ mode, setMode }) => {
           <ListItem disablePadding>
             <ListItemButton
               component="a"
-              href="#simple-list"
+              
               onClick={() => {
                 navigate("/message");
               }}
@@ -70,7 +69,7 @@ const Nav = ({ mode, setMode }) => {
           </ListItem>
 
           <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
+            <ListItemButton component="a" >
               <ListItemIcon>
                 <Person />
               </ListItemIcon>
@@ -78,7 +77,7 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
+            <ListItemButton component="a" >
               <ListItemIcon>
                 <AccountBox />
               </ListItemIcon>
@@ -86,7 +85,7 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
+            <ListItemButton component="a" >
               <ListItemIcon>
                 <ModeNight />
               </ListItemIcon>

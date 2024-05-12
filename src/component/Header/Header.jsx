@@ -18,9 +18,7 @@ import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/Slice/user-slice";
 import { useNavigate } from "react-router-dom";
-import User from "@mui/icons-material/People";
 import { People } from "@material-ui/icons";
-import { useMsal } from "@azure/msal-react";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -156,7 +154,11 @@ export default function Header({ data }) {
   return (
     <AppBar position="sticky">
       <Toolbar>
-        <IconButton color="inherit" sx={{ marginRight: 2 }}>
+        <IconButton color="inherit" sx={{ marginRight: 2 }}
+          onClick={() => {
+            navigate("/home");
+          }}
+        >
           <Avatar src="iconHust.png"></Avatar>
         </IconButton>
         <Typography

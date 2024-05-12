@@ -30,6 +30,8 @@ function App() {
         const res = await refreshToken(refresh_token);
         if (res?.EC === 200) {
           setToken(res.data.access_token, res.data.refresh_token);
+          //if in route / go to /home
+          navigate("/home");
         } else {
           setToken("", "");
           navigate("/login");
@@ -38,14 +40,21 @@ function App() {
         }
       }
     };
-    fetchMe();
+    if (accessToken) {
+      fetchMe();
+      if (window.location.pathname === "/") {
+        navigate("/home");
+      }
+    } else {
+      navigate("/login");
+    }
   }, []);
   return (
     <>
       {" "}
       <Header data={data} />
       <section className="body__container">
-        <Outlet data={data} />
+        <Outlet />
       </section>
     </>
   );

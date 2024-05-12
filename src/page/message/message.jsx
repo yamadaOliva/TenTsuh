@@ -6,6 +6,8 @@ import Chat from "../../component/Message/Chat";
 import { useState } from "react";
 import { getMe } from "../../service/user.service";
 import { useSelector } from "react-redux";
+
+
 export default function Message() {
   const accessToken = useSelector((state) => state.user.accessToken);
   const [user, setUser] = useState(null);

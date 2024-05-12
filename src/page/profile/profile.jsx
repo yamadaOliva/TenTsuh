@@ -3,21 +3,19 @@ import { getProfile } from "../../service/user.service";
 import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { getMajor } from "../../service/helper.service";
-import { address } from "../../utils";
+import { address, date } from "../../utils";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useTheme } from "@mui/material";
-
+import { toast } from "react-toastify";
+import { updateProfile } from "../../service/user.service";
 import "./profile.scss";
 import {
-  Avatar,
   Grid,
   Paper,
   Typography,
   TextField,
   Button,
-  FormControlLabel,
-  Checkbox,
   Box,
   OutlinedInput,
   InputLabel,
@@ -42,7 +40,8 @@ export default function Profile() {
   const [birthday, setBirthday] = useState("");
   const [gender, setGender] = useState("");
   const [interest, setInterest] = useState([]);
-
+  const [isSomethingChange, setIsSomethingChange] = useState(false);
+  const [rawBirthday, setRawBirthday] = useState("");
   const theme = useTheme();
   const ITEM_HEIGHT = 48;
   const ITEM_PADDING_TOP = 8;
@@ -99,6 +98,32 @@ export default function Profile() {
       // On autofill we get a stringified value.
       typeof value === "string" ? value.split(",") : value
     );
+    setIsSomethingChange(true);
+  };
+
+  const handleUpdate = async () => {
+    const data = {
+      name,
+      studentId,
+      majorId: majorCurrent.id,
+      schoolYear,
+      class: `${majorCurrent.acronym} ${classNumber}`,
+      phone,
+      liveIn,
+      city,
+      district,
+      birthday,
+      interest,
+      gender,
+      birthday: birthday ? birthday : rawBirthday,
+      avatarUrl: image,
+    };
+    console.log(data, "data");
+    const res = await updateProfile(user.accessToken, data);
+    if (res.status === 200) {
+      toast.success("Cập nhật thông tin thành công");
+      setIsSomethingChange(false);
+    }
   };
 
   useEffect(() => {
@@ -148,8 +173,9 @@ export default function Profile() {
       console.log(res.data.Birthday, "res.data.birthday");
 
       if (res.data.Birthday) {
-        setBirthday(res.data.birthday);
+        setRawBirthday(res.data.Birthday);
       }
+
       if (res.data.gender) {
         setGender(res.data.gender);
       } else {
@@ -177,7 +203,11 @@ export default function Profile() {
           <Box textAlign="center">
             {" "}
             {/* Đảm bảo component Upload nằm ở giữa */}
-            <Upload backgroundImage={image} setAvatarUrl={setImage} />
+            <Upload
+              backgroundImage={image}
+              setAvatarUrl={setImage}
+              setSomethingChange={setIsSomethingChange}
+            />
           </Box>
           <Grid align="center">
             <Typography
@@ -193,13 +223,16 @@ export default function Profile() {
             {/* 2 column */}
             <form className="form mt-5">
               <Grid container spacing={2}>
-                <Grid xs={6} className="pr-4">
+                <Grid item xs={6} className="pr-4">
                   <TextField
                     label="Họ và tên"
                     variant="outlined"
                     value={name}
                     fullWidth
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setIsSomethingChange(true);
+                    }}
                   />
 
                   <TextField
@@ -207,7 +240,10 @@ export default function Profile() {
                     variant="outlined"
                     value={studentId}
                     fullWidth
-                    onChange={(e) => setStudentId(e.target.value)}
+                    onChange={(e) => {
+                      setStudentId(e.target.value);
+                      setIsSomethingChange(true);
+                    }}
                     style={{ marginTop: "20px" }}
                     disabled
                   />
@@ -225,6 +261,7 @@ export default function Profile() {
                     value={majorCurrent?.id || 0}
                     onChange={(e) => {
                       setMajorCurrent(major[e.target.value - 1]);
+                      setIsSomethingChange(true);
                     }}
                     style={{ marginTop: "20px" }}
                   >
@@ -243,11 +280,13 @@ export default function Profile() {
                         fullWidth
                         required
                         select
+                        disabled
                         SelectProps={{
                           native: true,
                         }}
                         onChange={(e) => {
                           setSchoolYear(e.target.value);
+                          setIsSomethingChange(true);
                         }}
                         value={schoolYear || 2019}
                         style={{ marginTop: "20px" }}
@@ -276,6 +315,7 @@ export default function Profile() {
                         }}
                         onChange={(e) => {
                           setClassNumber(e.target.value);
+                          setIsSomethingChange(true);
                         }}
                         value={classNumber || 1}
                         style={{ marginTop: "20px" }}
@@ -304,7 +344,10 @@ export default function Profile() {
                     variant="outlined"
                     value={phone}
                     fullWidth
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      setIsSomethingChange(true);
+                    }}
                     style={{ marginTop: "20px" }}
                     SelectProps={{
                       native: true,
@@ -312,13 +355,16 @@ export default function Profile() {
                   />
                 </Grid>
                 {/* right */}
-                <Grid xs={6} className="pr-4">
+                <Grid item xs={6} className="pr-4">
                   <TextField
                     label="Nơi ở hiện tại"
                     variant="outlined"
                     value={liveIn}
                     fullWidth
-                    onChange={(e) => setLiveIn(e.target.value)}
+                    onChange={(e) => {
+                      setLiveIn(e.target.value);
+                      setIsSomethingChange(true);
+                    }}
                   />
                   <Grid container spacing={2}>
                     <Grid
@@ -333,7 +379,11 @@ export default function Profile() {
                         variant="outlined"
                         value={city}
                         fullWidth
-                        onChange={(e) => setCity(e.target.value)}
+                        onChange={(e) => {
+                          setCity(e.target.value);
+                          setDistrict(address.getDistricts(e.target.value)[0]);
+                          setIsSomethingChange(true);
+                        }}
                         select
                         SelectProps={{
                           native: true,
@@ -361,7 +411,10 @@ export default function Profile() {
                         variant="outlined"
                         value={district}
                         fullWidth
-                        onChange={(e) => setDistrict(e.target.value)}
+                        onChange={(e) => {
+                          setDistrict(e.target.value);
+                          setIsSomethingChange(true);
+                        }}
                         select
                         SelectProps={{
                           native: true,
@@ -389,14 +442,21 @@ export default function Profile() {
                     >
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
-                          label="Ngày sinh"
+                          label={`Ngày sinh: ${
+                            !birthday
+                              ? date.convertDateToString(rawBirthday)
+                              : ""
+                          }`}
                           value={birthday}
                           onChange={(newValue) => {
                             setBirthday(newValue);
+                            setIsSomethingChange(true);
                           }}
-                          renderInput={(params) => (
-                            <TextField {...params} fullWidth />
-                          )}
+                          renderInput={(params) => {
+                            console.log(params, "params");
+                            <TextField {...params} fullWidth />;
+                          }}
+                          view="[day, month, year]"
                         />
                       </LocalizationProvider>
                     </Grid>
@@ -418,7 +478,10 @@ export default function Profile() {
                           native: true,
                         }}
                         value={gender}
-                        onChange={(e) => setGender(e.target.value)}
+                        onChange={(e) => {
+                          setGender(e.target.value);
+                          setIsSomethingChange(true);
+                        }}
                         defaultValue="Nam"
                       >
                         <option value="Nam">Nam</option>
@@ -472,6 +535,20 @@ export default function Profile() {
               </Grid>
             </form>
           </Grid>
+          {isSomethingChange && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleUpdate}
+              style={{
+                marginTop: "20px",
+                justifyContent: "center",
+                display: "flex",
+              }}
+            >
+              Cập nhật
+            </Button>
+          )}
         </Paper>
       </Grid>
     </section>

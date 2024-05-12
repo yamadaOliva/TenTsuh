@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import "./Upload.scss";
 export default function Upload(props) {
   const cloudinaryRef = useRef();
@@ -7,9 +8,7 @@ export default function Upload(props) {
   // eslint-disable-next-line react/prop-types
   const [currentImage, setCurrentImage] = useState(props?.backgroundImage);
   useEffect(() => {
-    console.log(props?.backgroundImage);
     cloudinaryRef.current = window.cloudinary;
-    console.log("cloud:", cloudinaryRef.current);
     widgetRef.current = cloudinaryRef.current?.createUploadWidget(
       {
         cloudName: "subarasuy",
@@ -22,12 +21,15 @@ export default function Upload(props) {
         if (!error && result && result.event === "success") {
           const fileExtension = result.info.format;
           if (fileExtension !== "png" && fileExtension !== "jpg") {
-            
+            toast.error("anh phải có định dạng jpg hoặc png");
             return;
-          }
+          } 
           console.log(result.info.secure_url);
           if (result.info?.secure_url?.startsWith("http")) {
             setCurrentImage(result.info.secure_url);
+            if(props.setSomethingChange){
+              props.setSomethingChange(true);
+            }
           }
         }
       }
@@ -36,6 +38,7 @@ export default function Upload(props) {
   }, []);
   useEffect(() => {
     props.setAvatarUrl(currentImage);
+    
   }, [currentImage]);
   return (
     <button

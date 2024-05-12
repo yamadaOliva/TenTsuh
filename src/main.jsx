@@ -44,10 +44,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/" element={<App />}>
             <Route path="home" element={<Home />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="message" element={<Message />} />
           </Route>
           <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />
-          <Route path="message" element={<Message />} />
           
         </Routes>
         <ToastContainer
