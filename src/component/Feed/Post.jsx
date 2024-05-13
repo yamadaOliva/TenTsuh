@@ -10,34 +10,90 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-const Post = () => {
+import {date} from "../../utils/index";
+const Post = ({ post }) => {
   return (
-    <Card sx={{ margin: 5 }}>
+    <Card
+      sx={{ margin: 5 }}
+      style={{
+        boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
+        transition: "0.3s",
+        borderRadius: "10px",
+        maxWidth: "800px",
+        marginLeft: "12%",
+      }}
+    >
       <CardHeader
         avatar={
-          <Avatar sx={{ bgcolor: "red" }} aria-label="recipe">
-            R
-          </Avatar>
+          <Avatar
+            aria-label="recipe"
+            src={post.user.avatarUrl}
+            style={{
+              borderColor: "primary.main",
+              border: "1px solid",
+            }}
+          />
         }
         action={
           <IconButton aria-label="settings">
             <MoreVert />
           </IconButton>
         }
-        title="John Doe"
+        title={post.user.name}
         subheader="September 14, 2022"
+        style={{
+          borderBottom: "1px solid #C0C0C0",
+        }}
       />
-      <CardMedia
-        component="img"
-        height="20%"
-        image="https://images.pexels.com/photos/4534200/pexels-photo-4534200.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-        alt="Paella dish"
-      />
-      <CardContent>
-        <Typography variant="body2" color="text.secondary">
-          This impressive paella is a perfect party dish and a fun meal to cook
-          together with your guests. Add 1 cup of frozen peas along with the
-          mussels, if you like.
+
+      {post.imageUrl && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "20%",
+          }}
+        >
+          <CardMedia
+            component="img"
+            image={post.imageUrl}
+            alt="Paella dish"
+            style={{
+              objectFit: "cover",
+              maxHeight: "600px",
+              width: "fit-content",
+            }}
+          />
+        </div>
+      )}
+
+      <CardContent
+        style={{
+          borderTop: "1px solid #C0C0C0",
+          borderBottom: "1px solid #C0C0C0",
+          paddingLeft: "1rem",
+        }}
+      >
+        <Typography
+          variant="body2"
+          color="text.black"
+          style={{
+            fontSize: "1.4rem",
+            fontWeight: "bold",
+          }}
+        >
+          {post.title}
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          style={{
+            fontSize: "1rem",
+            fontWeight: "400",
+          }}
+        >
+          {post.content}
         </Typography>
       </CardContent>
       <CardActions disableSpacing>

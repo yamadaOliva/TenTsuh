@@ -21,7 +21,14 @@ import PropTypes from "prop-types";
 const Nav = ({ mode, setMode }) => {
   const navigate = useNavigate();
   return (
-    <Box flex={1} p={2} sx={{ display: { xs: "none", sm: "block" } }}>
+    <Box
+      flex={1}
+      p={2}
+      sx={{ display: { xs: "none", sm: "block" } }}
+      style={{
+        marginLeft: "15px",
+      }}
+    >
       <Box position="fixed">
         <List>
           <ListItem disablePadding>
@@ -46,17 +53,17 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" >
+            <ListItemButton component="a">
               <ListItemIcon>
                 <Group />
               </ListItemIcon>
-              <ListItemText primary="Hội nhóm" />
+              <ListItemText primary="Hội nhóm" 
+              />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton
               component="a"
-              
               onClick={() => {
                 navigate("/message");
               }}
@@ -69,7 +76,7 @@ const Nav = ({ mode, setMode }) => {
           </ListItem>
 
           <ListItem disablePadding>
-            <ListItemButton component="a" >
+            <ListItemButton component="a">
               <ListItemIcon>
                 <Person />
               </ListItemIcon>
@@ -77,7 +84,7 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" >
+            <ListItemButton component="a">
               <ListItemIcon>
                 <AccountBox />
               </ListItemIcon>
@@ -85,7 +92,7 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a" >
+            <ListItemButton component="a">
               <ListItemIcon>
                 <ModeNight />
               </ListItemIcon>

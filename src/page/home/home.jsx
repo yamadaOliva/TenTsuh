@@ -16,7 +16,7 @@ export default function Home() {
       <ThemeProvider theme={darkTheme}>
         <Box
           sx={{ display: "flex" }}
-          bgcolor={"background.default"}
+          bgcolor={"#f0f0f1"}
           color={"text.primary"}
         >
           <Nav setMode={setMode} mode={mode} />

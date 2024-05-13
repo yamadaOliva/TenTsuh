@@ -20,6 +20,11 @@ class Date {
   convertDateToString(dateString) {
     return dateString.split("T")[0].split("-").reverse().join("/");
   }
+  convertDateToTime(dateString) {
+    //2024-05-23T17:26:46.070Z to mm/hh dd/mm/yyyy
+    const date = new Date(dateString);
+    return `${date.getHours()}:${date.getMinutes()} ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`;
+  }
 }
 export const address = new Address();
 export const date = new Date();
