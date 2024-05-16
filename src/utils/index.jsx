@@ -21,10 +21,16 @@ class Date {
     return dateString.split("T")[0].split("-").reverse().join("/");
   }
   convertDateToTime(dateString) {
-    //2024-05-23T17:26:46.070Z to mm/hh dd/mm/yyyy
-    const date = new Date(dateString);
-    return `${date.getHours()}:${date.getMinutes()} ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`;
-  }
+    console.log("Kiểm tra đầu vào: ", typeof dateString);
+    console.log(new Date("2024-05-13T05:39:43.712Z"));
+
+   let day = dateString.split("T")[0].split("-").reverse().join("/");
+    let time = dateString.split("T")[1].split(":").slice(0, 2).join(":");
+    return `${time} ${day}`;
+}
+
+
+
 }
 export const address = new Address();
 export const date = new Date();

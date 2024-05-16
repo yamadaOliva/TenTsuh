@@ -14,13 +14,14 @@ import {date} from "../../utils/index";
 const Post = ({ post }) => {
   return (
     <Card
-      sx={{ margin: 5 }}
       style={{
         boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
         transition: "0.3s",
         borderRadius: "10px",
         maxWidth: "800px",
-        marginLeft: "12%",
+        marginLeft: "18%",
+        marginBottom: "20px",
+        marginTop: "10px",
       }}
     >
       <CardHeader
@@ -40,7 +41,7 @@ const Post = ({ post }) => {
           </IconButton>
         }
         title={post.user.name}
-        subheader="September 14, 2022"
+        subheader={date.convertDateToTime(post.createdAt)}
         style={{
           borderBottom: "1px solid #C0C0C0",
         }}

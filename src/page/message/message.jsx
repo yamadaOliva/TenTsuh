@@ -57,13 +57,7 @@ export default function Message() {
     <>
       <section>
         <Chat />
-        <button
-          onClick={() => {
-            sendMessage(`Hello from ${user?.name}`);
-          }}
-        >
-          Test
-        </button>
+        
       </section>
     </>
   );

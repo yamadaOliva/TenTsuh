@@ -17,9 +17,11 @@ import {
   Switch,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
 const Nav = ({ mode, setMode }) => {
   const navigate = useNavigate();
+  const id = useSelector((state) => state.user.id);
   return (
     <Box
       flex={1}
@@ -32,18 +34,24 @@ const Nav = ({ mode, setMode }) => {
       <Box position="fixed">
         <List>
           <ListItem disablePadding>
-            <ListItemButton component="a" href="#home">
+            <ListItemButton
+              component="a"
+              href="#home"
+              onClick={() => {
+                navigate("/home");
+              }}
+            >
               <ListItemIcon>
                 <Home />
               </ListItemIcon>
-              <ListItemText primary="Homepage" />
+              <ListItemText primary="Trang chủ" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton
               component="a"
               onClick={() => {
-                navigate("/message");
+                navigate("/home");
               }}
             >
               <ListItemIcon>
@@ -57,8 +65,7 @@ const Nav = ({ mode, setMode }) => {
               <ListItemIcon>
                 <Group />
               </ListItemIcon>
-              <ListItemText primary="Hội nhóm" 
-              />
+              <ListItemText primary="Hội nhóm" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
@@ -84,7 +91,12 @@ const Nav = ({ mode, setMode }) => {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton component="a">
+            <ListItemButton
+              component="a"
+              onClick={() => {
+                navigate("/profilepage/" + id);
+              }}
+            >
               <ListItemIcon>
                 <AccountBox />
               </ListItemIcon>

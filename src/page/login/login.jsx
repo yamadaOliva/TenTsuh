@@ -40,6 +40,10 @@ const WrappedView = () => {
     const loginOffice = async (data) => {
       const res = await login365(data);
       console.log(res.data);
+      if (+res?.EC !== 200) {
+        toast.error("Đăng nhập thất bại");
+        return;
+      }
       setToken(res.data.access_token, res.data.refresh_token);
       localStorage.setItem("IsLogin", true);
       navigate("/home");
@@ -67,6 +71,9 @@ const WrappedView = () => {
     } 
    
   }, [activeAccount]);
+
+  
+
   const handleLogin = () => {
     instance
       .loginRedirect({

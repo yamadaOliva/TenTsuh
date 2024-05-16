@@ -8,7 +8,7 @@ import Header from "./component/Header/Header";
 import { Outlet } from "react-router-dom";
 import { refreshToken } from "./service/auth.service";
 import { getMe } from "./service/user.service";
-import { setAccessToken, setRefreshToken } from "./redux/Slice/user-slice";
+import { setAccessToken, setRefreshToken ,setInfo } from "./redux/Slice/user-slice";
 
 function App() {
   const [data, setData] = useState({});
@@ -26,10 +26,12 @@ function App() {
       if (res?.EC === 200) {
         console.log(res.data);
         setData(res.data);
+        dispatch(setInfo(res.data));
       } else {
         const res = await refreshToken(refresh_token);
         if (res?.EC === 200) {
           setToken(res.data.access_token, res.data.refresh_token);
+
           //if in route / go to /home
           navigate("/home");
         } else {

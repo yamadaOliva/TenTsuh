@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Post from "./Post";
 import { getPotsOfUser } from "../../service/post.service";
 import { useSelector } from "react-redux";
+import { getMe } from "../../service/user.service";
 const Feed = () => {
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
@@ -25,7 +26,9 @@ const Feed = () => {
   }, [3000]);
 
   return (
-    <Box flex={4} p={{ xs: 0, md: 2 }} 
+    <Box
+      flex={4}
+      p={{ xs: 0, md: 2 }}
       style={{
         paddingRigth: "20px",
       }}

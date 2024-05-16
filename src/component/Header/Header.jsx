@@ -16,7 +16,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import Avatar from "@mui/material/Avatar";
 import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
-import { logout } from "../../redux/Slice/user-slice";
+import { logout  } from "../../redux/Slice/user-slice";
 import { useNavigate } from "react-router-dom";
 import { People } from "@material-ui/icons";
 
