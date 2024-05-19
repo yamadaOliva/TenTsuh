@@ -14,6 +14,7 @@ import Home from "./page/home/home.jsx";
 import Message from "./page/message/message.jsx";
 import Profile from "./page/profile/profile.jsx";
 import ProfileApp from "./page/profilePage/profilepage.jsx";
+import Friend from "./page/friend/fiend.jsx";
 //Azure
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
 import { msalConfig } from "./setup/auth-config.jsx";
@@ -47,6 +48,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="profile" element={<Profile />} />
             <Route path="message" element={<Message />} />
             <Route path="profilepage/:id" element={<ProfileApp />} />
+            <Route path="friend" element={<Friend />} />
           </Route>
           <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />

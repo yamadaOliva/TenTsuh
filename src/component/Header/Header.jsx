@@ -19,6 +19,7 @@ import { useDispatch } from "react-redux";
 import { logout  } from "../../redux/Slice/user-slice";
 import { useNavigate } from "react-router-dom";
 import { People } from "@material-ui/icons";
+import { io } from "socket.io-client";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -205,6 +206,7 @@ export default function Header({ data }) {
             size="large"
             aria-label="show 17 new notifications"
             color="inherit"
+            
           >
             <Badge badgeContent={17} color="error">
               <NotificationsIcon />

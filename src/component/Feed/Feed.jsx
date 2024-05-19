@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import Post from "./Post";
 import { getPotsOfUser } from "../../service/post.service";
 import { useSelector } from "react-redux";
-import { getMe } from "../../service/user.service";
 const Feed = () => {
+  const PER_PAGE = 5;
+
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
   const accessToken = useSelector((state) => state.user.accessToken);
-
   useEffect(() => {
     const fetchPosts = async () => {
       try {

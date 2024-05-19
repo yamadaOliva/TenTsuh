@@ -47,19 +47,7 @@ const Nav = ({ mode, setMode }) => {
               <ListItemText primary="Trang chủ" />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton
-              component="a"
-              onClick={() => {
-                navigate("/home");
-              }}
-            >
-              <ListItemIcon>
-                <Article />
-              </ListItemIcon>
-              <ListItemText primary="Pages" />
-            </ListItemButton>
-          </ListItem>
+
           <ListItem disablePadding>
             <ListItemButton component="a">
               <ListItemIcon>
@@ -83,7 +71,12 @@ const Nav = ({ mode, setMode }) => {
           </ListItem>
 
           <ListItem disablePadding>
-            <ListItemButton component="a">
+            <ListItemButton component="a"
+              onClick={() => {
+                navigate("/friend");
+              }
+              }
+            >
               <ListItemIcon>
                 <Person />
               </ListItemIcon>
