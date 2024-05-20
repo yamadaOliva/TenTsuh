@@ -16,4 +16,25 @@ const getCountryman = (accessToken, page, perpage) => {
   });
 };
 
-export { getFriendsRequest, getCountryman };
+const searchFriendRequest = (accessToken, keyword, type) => {
+  return axios.get(`/friend/search/${type}/${keyword}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+
+const filterFriendRequest = (accessToken, page, perpage, type) => {
+  return axios.get(`/friend/filter/${type}/${page}/${perpage}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+
+export {
+  getFriendsRequest,
+  getCountryman,
+  searchFriendRequest,
+  filterFriendRequest,
+};

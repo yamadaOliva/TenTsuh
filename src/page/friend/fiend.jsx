@@ -23,7 +23,12 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import { getFriendsRequest, getCountryman } from "../../service/friend.service";
+import {
+  getFriendsRequest,
+  getCountryman,
+  searchFriendRequest,
+  filterFriendRequest,
+} from "../../service/friend.service";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -54,13 +59,11 @@ const useStyles = makeStyles((theme) => ({
   },
   friendCard: {
     marginBottom: theme.spacing(2),
-    cursor: "pointer", // Add cursor pointer on hover
   },
   listItem: {
     borderRadius: theme.shape.borderRadius,
     "&:hover": {
       backgroundColor: "#e0e0e0",
-      cursor: "pointer", // Add cursor pointer on hover
     },
   },
   selectedListItem: {
@@ -84,6 +87,7 @@ export default function Friend() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("name");
+  const [filter, setFilter] = useState("sameClass"); // Add filter state
   const classes = useStyles();
 
   const handleListItemClick = (index) => {
@@ -93,6 +97,20 @@ export default function Friend() {
   const handleSearchTypeChange = (event, newSearchType) => {
     if (newSearchType !== null) {
       setSearchType(newSearchType);
+    }
+  };
+
+  const handleFilterChange = (event, newFilter) => {
+    if (newFilter !== null) {
+      setFilter(newFilter);
+    }
+  };
+
+  const handleSearch = async () => {
+    const res = await searchFriendRequest(accessToken, searchQuery, searchType);
+    console.log(res.data);
+    if (res?.EC === 200) {
+      setFriendList(res.data);
     }
   };
 
@@ -111,26 +129,32 @@ export default function Friend() {
     const fetchCountryman = async () => {
       switch (selectedIndex) {
         case 1:
-          const res = await getFriendsRequest(accessToken, page, PER_PAGE);
+          setPage(1);
+          const res = await getFriendsRequest(accessToken, 1, PER_PAGE);
           if (res?.EC === 200) {
             setFriendList(res.data);
           }
           break;
         case 2:
-          const res2 = await getFriendsRequest(accessToken, page, PER_PAGE);
-          if (res2?.EC === 200) {
-            setFriendList(res2.data);
-          }
+          setPage(1);
+          setFriendList([]);
           break;
         case 3:
-          const res3 = await getCountryman(accessToken, page, PER_PAGE);
+          setPage(1);
+          const res3 = await getCountryman(accessToken, 1, PER_PAGE);
           console.log(res3);
           if (res3?.EC === 200) {
             setFriendList(res3.data);
           }
           break;
         case 4:
-          const res4 = await getCountryman(accessToken, page, PER_PAGE);
+          setPage(1);
+          const res4 = await filterFriendRequest(
+            accessToken,
+            1,
+            PER_PAGE,
+            filter
+          );
           if (res4?.EC === 200) {
             setFriendList(res4.data);
           }
@@ -142,10 +166,21 @@ export default function Friend() {
     fetchCountryman();
   }, [selectedIndex]);
 
-  const handleSearch = () => {
-    // Add logic to search friends based on searchQuery and searchType
-    console.log(`Searching for ${searchQuery} by ${searchType}`);
-  };
+  useEffect(() => {
+    const fetchFilteredFriends = async () => {
+      const res = await filterFriendRequest(
+        accessToken,
+        page,
+        PER_PAGE,
+        filter
+      );
+      console.log(res.data);
+      if (res?.EC === 200) {
+        setFriendList(res.data);
+      }
+    };
+    if(selectedIndex == 4) fetchFilteredFriends();
+  }, [filter]);
 
   return (
     <div
@@ -266,27 +301,47 @@ export default function Friend() {
                   variant="contained"
                   color="primary"
                   onClick={handleSearch}
-                  style={{ height: "100%",
-
-                  }}
+                  style={{ height: "100%" }}
                 >
                   Tìm kiếm
                 </Button>
               </Box>
             </Box>
           )}
+          {selectedIndex === 4 && (
+            <>
+              <Box
+                mb={2}
+                display="flex"
+                flexDirection={{ xs: "column", sm: "column" }}
+                borderBottom="1px solid #e0e0e0"
+              >
+                {/* 3 options */}
+                <ToggleButtonGroup
+                  value={filter}
+                  exclusive
+                  onChange={handleFilterChange}
+                  aria-label="filter"
+                >
+                  <ToggleButton value="sameClass" aria-label="same class">
+                    Cùng lớp
+                  </ToggleButton>
+                  <ToggleButton value="sameMajor" aria-label="same faculty">
+                    Cùng khoa
+                  </ToggleButton>
+                  <ToggleButton value="sameSchoolYear" aria-label="same year">
+                    Cùng khóa
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            </>
+          )}
           <Grid container spacing={3}>
             {friendList.map((friend, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
                 <Card
                   className={classes.friendCard}
-                  onClick={() => {
-                    if (selectedIndex == 1) {
-                      navigate(`/profilepage/${friend.user?.id}`);
-                    } else {
-                      navigate(`/profilepage/${friend.id}`);
-                    }
-                  }}
+                  
                 >
                   <CardContent>
                     <Box
@@ -307,6 +362,13 @@ export default function Friend() {
                             : friend?.avatarUrl
                         }
                         className={classes.avatar}
+                        onClick={() => {
+                          if (selectedIndex == 1) {
+                            navigate(`/profilepage/${friend.user?.id}`);
+                          } else {
+                            navigate(`/profilepage/${friend.id}`);
+                          }
+                        }}
                       />
                       <Typography variant="h6">
                         {selectedIndex == 1 ? friend.user?.name : friend?.name}
@@ -342,7 +404,9 @@ export default function Friend() {
                     </Box>
 
                     {selectedIndex != 1 ? (
-                      <Box display="flex" justifyContent="space-between" mt={2}>
+                      <Box display="flex" justifyContent="center" mt={2}
+                      
+                      >
                         <Button variant="contained" color="primary">
                           Thêm bạn
                         </Button>
