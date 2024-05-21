@@ -33,6 +33,7 @@ import {
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket";
+import { toast } from "react-toastify";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -109,6 +110,19 @@ export default function Friend() {
     }
   };
 
+  const handleAddFriend = async (friendId) => {
+    const res = await addFriendRequest(accessToken, friendId);
+    console.log(res);
+    if (res?.EC === 200) {
+      // Add the new friend to the friendList
+      toast.success("Đã gửi lời mời kết bạn");
+      socket.emit("addFriend", {friendId});
+      //pop
+      const newFriendList = friendList.filter((friend) => friend.id !== friendId);
+      setFriendList(newFriendList);
+    }
+  };
+
   const handleSearch = async () => {
     const res = await searchFriendRequest(accessToken, searchQuery, searchType);
     console.log(res.data);
@@ -121,6 +135,18 @@ export default function Friend() {
     socket.emit("join", `user_${user_id}`);
     socket.on("joined", (data) => {
       console.log(data);
+    });
+    socket.on("notificationFriend", () => {
+      if (selectedIndex === 1) {
+        const fetchFriendsRequest = async () => {
+          const res = await getFriendsRequest(accessToken, page, PER_PAGE);
+          console.log(res.data);
+          if (res?.EC === 200) {
+            setFriendList(res.data);
+          }
+        };
+        fetchFriendsRequest();
+      }
     });
     const fetchFriendsRequest = async () => {
       const res = await getFriendsRequest(accessToken, page, PER_PAGE);
@@ -409,7 +435,11 @@ export default function Friend() {
 
                     {selectedIndex != 1 ? (
                       <Box display="flex" justifyContent="center" mt={2}>
-                        <Button variant="contained" color="primary">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleAddFriend(friend.id)}
+                        >
                           Thêm bạn
                         </Button>
                       </Box>

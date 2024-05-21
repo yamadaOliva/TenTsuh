@@ -20,6 +20,10 @@ import { logout } from "../../redux/Slice/user-slice";
 import { useNavigate } from "react-router-dom";
 import { People } from "@material-ui/icons";
 import { socket } from "../../socket";
+import { getFriendsRequest } from "../../service/friend.service";
+import { useSelector } from "react-redux";
+import FriendRequestUnit from "./FriendRequestUnit";
+
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -61,14 +65,15 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Header({ data }) {
-  console.log(data);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const accessToken = useSelector((state) => state.user.accessToken);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
+  const [friends, setFriends] = React.useState([]);
+  const [friendsMenuAnchorEl, setFriendsMenuAnchorEl] = React.useState(null);
+  
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -76,15 +81,16 @@ export default function Header({ data }) {
   const handleMobileMenuClose = () => {
     setMobileMoreAnchorEl(null);
   };
+  
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
+  
   const handleClose = () => {
     setAnchorEl(null);
   };
 
   const handleProfileClick = () => {
-    //go to profile
     navigate("/profile");
     handleClose();
   };
@@ -99,9 +105,37 @@ export default function Header({ data }) {
     navigate("/login");
   };
 
+  const fetchFriends = async () => {
+    const response = await getFriendsRequest(accessToken, 1, 1000);
+    setFriends(response.data);
+  }
+
+  React.useEffect(() => {
+    fetchFriends();
+  }, []);
+
   React.useEffect(() => {
     socket.emit("join", `user_${data.id}`);
+    socket.on("notificationFriend", () => {
+      fetchFriends();
+    });
   }, [data]);
+
+  const handleFriendsMenuOpen = (event) => {
+    setFriendsMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleFriendsMenuClose = () => {
+    setFriendsMenuAnchorEl(null);
+  };
+
+  const handleAcceptFriend = (id) => {
+    // Logic để chấp nhận lời mời kết bạn
+  };
+
+  const handleRejectFriend = (id) => {
+    // Logic để từ chối lời mời kết bạn
+  };
 
   const mobileMenuId = "primary-search-account-menu-mobile";
   const renderMobileMenu = (
@@ -191,10 +225,11 @@ export default function Header({ data }) {
           </Typography>
           <IconButton
             size="large"
-            aria-label="show 17 new notifications"
+            aria-label="show new friend requests"
             color="inherit"
+            onClick={handleFriendsMenuOpen}
           >
-            <Badge badgeContent={10} color="error">
+            <Badge badgeContent={friends.length} color="error">
               <People />
             </Badge>
           </IconButton>
@@ -241,12 +276,42 @@ export default function Header({ data }) {
         )}
       </Toolbar>
       {renderMobileMenu}
+      <Menu
+        anchorEl={friendsMenuAnchorEl}
+        open={Boolean(friendsMenuAnchorEl)}
+        onClose={handleFriendsMenuClose}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        style={{ marginTop: 30 }}
+      >
+        {friends.length > 0 ? (
+          friends.map((friend) => (
+            <Box key={friend.id}>
+              <FriendRequestUnit
+                friend={friend}
+                onAccept={handleAcceptFriend}
+                onReject={handleRejectFriend}
+              />
+            </Box>
+          ))
+        ) : (
+          <MenuItem>Không có lời mời kết bạn nào</MenuItem>
+        )}
+      </Menu>
     </AppBar>
   );
 }
+
 Header.propTypes = {
   data: PropTypes.shape({
+    id: PropTypes.string.isRequired,
     avatarUrl: PropTypes.string,
-    name: PropTypes.string,
-  }),
+    name: PropTypes.string.isRequired,
+  }).isRequired,
 };
