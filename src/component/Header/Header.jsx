@@ -16,11 +16,10 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import Avatar from "@mui/material/Avatar";
 import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
-import { logout  } from "../../redux/Slice/user-slice";
+import { logout } from "../../redux/Slice/user-slice";
 import { useNavigate } from "react-router-dom";
 import { People } from "@material-ui/icons";
-import { io } from "socket.io-client";
-
+import { socket } from "../../socket";
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -62,9 +61,9 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Header({ data }) {
+  console.log(data);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
@@ -99,6 +98,10 @@ export default function Header({ data }) {
     }
     navigate("/login");
   };
+
+  React.useEffect(() => {
+    socket.emit("join", `user_${data.id}`);
+  }, [data]);
 
   const mobileMenuId = "primary-search-account-menu-mobile";
   const renderMobileMenu = (
@@ -155,7 +158,9 @@ export default function Header({ data }) {
   return (
     <AppBar position="sticky">
       <Toolbar>
-        <IconButton color="inherit" sx={{ marginRight: 2 }}
+        <IconButton
+          color="inherit"
+          sx={{ marginRight: 2 }}
           onClick={() => {
             navigate("/home");
           }}
@@ -206,7 +211,6 @@ export default function Header({ data }) {
             size="large"
             aria-label="show 17 new notifications"
             color="inherit"
-            
           >
             <Badge badgeContent={17} color="error">
               <NotificationsIcon />

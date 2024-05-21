@@ -32,9 +32,24 @@ const filterFriendRequest = (accessToken, page, perpage, type) => {
   });
 };
 
+const addFriendRequest = (accessToken, idTarget) => {
+  return axios.post(
+    "/friend/add",
+    {
+      idTarget,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+}
+
 export {
   getFriendsRequest,
   getCountryman,
   searchFriendRequest,
   filterFriendRequest,
+  addFriendRequest,
 };

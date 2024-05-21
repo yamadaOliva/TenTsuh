@@ -96,6 +96,7 @@ export default function Register() {
     const get = async () => {
       try {
         const res = await getMajor();
+        console.log(res.data);
         setMajor(res.data);
         setCurrentMajor(res.data[1]);
         setClassCount(res.data[1].classCount[0].schoolYear);
@@ -179,7 +180,7 @@ export default function Register() {
       toast.error("Mã sinh viên không được để trống");
       return false;
     }
-    const regexMail = /^[a-zA-Z0-9]+@(?:[a-zA-Z0-9]+\.)+[A-Za-z]+$/;
+    const regexMail = /^[a-zA-Z]+(?:\.[a-zA-Z]+)*\d{6}@sis\.hust\.edu\.vn$/;
     const regexPhone = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
     if (!regexMail.test(email)) {
       toast.error("Email không hợp lệ");
@@ -197,6 +198,17 @@ export default function Register() {
       toast.error("Mật khẩu phải có ít nhất 6 kí tự");
       return false;
     }
+    const regexStudentId = /\d{8}/;
+    if (!regexStudentId.test(studentId)) {
+      toast.error("Mã sinh viên không hợp lệ");
+      return false;
+    }
+    let studentId1 = email.split("@")[0].split(".")[1].slice(2);
+    if (studentId.slice(2) !== studentId1) {
+      toast.error("Mã sinh viên không khớp với email");
+      return false;
+    }
+    
     return true;
   };
   const handleSubmit = async (e) => {

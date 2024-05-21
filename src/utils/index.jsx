@@ -1,4 +1,5 @@
 import data from "../assets/data/data.json";
+console.log(data);
 class Address {
   getCities() {
     return data.map((item) => item.Name);

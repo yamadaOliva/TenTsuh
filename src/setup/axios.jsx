@@ -1,7 +1,7 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 const instance = axios.create({
-  baseURL: "http://192.168.1.14:8080",
+  baseURL: "http://localhost:8080",
 });
 instance.defaults.withCredentials = true;
 instance.interceptors.response.use(
@@ -12,7 +12,6 @@ instance.interceptors.response.use(
     const status = error.response ? error.response.status : 500;
     switch (status) {
       case 401:
-        
         break;
       case 403:
         toast.error("Forbidden");
@@ -24,7 +23,6 @@ instance.interceptors.response.use(
         toast.error("Internal Server Error");
         break;
       default:
-        
     }
   }
 );

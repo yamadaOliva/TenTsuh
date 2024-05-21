@@ -19,6 +19,7 @@ export default function ProfileApp() {
           sx={{ display: "flex" }}
           bgcolor={"#f0f0f1"}
           color={"text.primary"}
+          minHeight={"93.2vh"}
         >
           <Nav setMode={setMode} mode={mode} />
           <Feed />

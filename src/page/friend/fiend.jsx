@@ -28,9 +28,11 @@ import {
   getCountryman,
   searchFriendRequest,
   filterFriendRequest,
+  addFriendRequest,
 } from "../../service/friend.service";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { socket } from "../../socket";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -80,6 +82,7 @@ const friends = [
 
 export default function Friend() {
   const accessToken = useSelector((state) => state.user.accessToken);
+  const user_id = useSelector((state) => state.user.id);
   const navigate = useNavigate();
   const [friendList, setFriendList] = useState(friends); // Replace 'friends' with the actual data from the API
   const [selectedIndex, setSelectedIndex] = useState(1);
@@ -115,6 +118,10 @@ export default function Friend() {
   };
 
   useEffect(() => {
+    socket.emit("join", `user_${user_id}`);
+    socket.on("joined", (data) => {
+      console.log(data);
+    });
     const fetchFriendsRequest = async () => {
       const res = await getFriendsRequest(accessToken, page, PER_PAGE);
       console.log(res.data);
@@ -179,7 +186,7 @@ export default function Friend() {
         setFriendList(res.data);
       }
     };
-    if(selectedIndex == 4) fetchFilteredFriends();
+    if (selectedIndex == 4) fetchFilteredFriends();
   }, [filter]);
 
   return (
@@ -339,10 +346,7 @@ export default function Friend() {
           <Grid container spacing={3}>
             {friendList.map((friend, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
-                <Card
-                  className={classes.friendCard}
-                  
-                >
+                <Card className={classes.friendCard}>
                   <CardContent>
                     <Box
                       style={{
@@ -404,9 +408,7 @@ export default function Friend() {
                     </Box>
 
                     {selectedIndex != 1 ? (
-                      <Box display="flex" justifyContent="center" mt={2}
-                      
-                      >
+                      <Box display="flex" justifyContent="center" mt={2}>
                         <Button variant="contained" color="primary">
                           Thêm bạn
                         </Button>
