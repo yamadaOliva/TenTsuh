@@ -61,6 +61,7 @@ const acceptFriendRequest = (accessToken, id) => {
 };
 
 const rejectFriendRequest = (accessToken, id) => {
+  console.log(id);
   return axios.put(
     `/friend/reject`,
     {
@@ -73,6 +74,15 @@ const rejectFriendRequest = (accessToken, id) => {
     }
   );
 };
+
+const getFriendList = (accessToken, page, perpage) => {
+  return axios.get(`/friend/list/${page}/${perpage}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
 export {
   getFriendsRequest,
   getCountryman,
@@ -81,4 +91,5 @@ export {
   addFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
+  getFriendList,
 };

@@ -3,17 +3,27 @@ import { useEffect, useState } from "react";
 import Post from "./Post";
 import { getPotsOfUser } from "../../service/post.service";
 import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 const Feed = () => {
   const PER_PAGE = 5;
-
+  const { id } = useParams();
   const [loading, setLoading] = useState(true);
+  console.log(id);
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
-  const accessToken = useSelector((state) => state.user.accessToken);
+  const userId = useSelector((state) => state.user.id);
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await getPotsOfUser(accessToken);
+        if (id) {
+          const res = await getPotsOfUser(id);
+          console.log(res.data);
+          setPosts(res.data);
+        }else{
+          const res = await getPotsOfUser(userId);
+          console.log(res.data);
+          setPosts(res.data);
+        }
         console.log(res.data);
         setPosts(res.data);
       } catch (error) {

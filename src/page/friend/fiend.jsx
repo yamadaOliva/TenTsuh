@@ -22,6 +22,11 @@ import {
   Divider,
   ToggleButton,
   ToggleButtonGroup,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import {
   getFriendsRequest,
@@ -31,6 +36,7 @@ import {
   addFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
+  getFriendList,
 } from "../../service/friend.service";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -86,6 +92,7 @@ const friends = [
 export default function Friend() {
   const accessToken = useSelector((state) => state.user.accessToken);
   const user_id = useSelector((state) => state.user.id);
+  const myId = useSelector((state) => state.user.id);
   const navigate = useNavigate();
   const [friendList, setFriendList] = useState(friends); // Replace 'friends' with the actual data from the API
   const [selectedIndex, setSelectedIndex] = useState(1);
@@ -94,6 +101,9 @@ export default function Friend() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("name");
   const [filter, setFilter] = useState("sameClass"); // Add filter state
+  const [open, setOpen] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [countFriend, setCountFriend] = useState(0);
   const classes = useStyles();
 
   const handleListItemClick = (index) => {
@@ -120,7 +130,7 @@ export default function Friend() {
       toast.success("Đã gửi lời mời kết bạn");
       socket.emit("addFriend", { friendId });
       //pop
-      const newFriendList = friendList.filter(
+     const newFriendList = friendList.filter(
         (friend) => friend.id !== friendId
       );
       setFriendList(newFriendList);
@@ -142,6 +152,7 @@ export default function Friend() {
       toast.success("Chấp nhận lời mời kết bạn thành công");
       const newFriendList = friendList.filter((friend) => friend.id !== id);
       setFriendList(newFriendList);
+      socket.emit("addFriend", { friendId: myId });
     }
   };
 
@@ -152,6 +163,31 @@ export default function Friend() {
       toast.success("Từ chối lời mời kết bạn thành công");
       const newFriendList = friendList.filter((friend) => friend.id !== id);
       setFriendList(newFriendList);
+      socket.emit("addFriend", { friendId: myId });
+    }
+  };
+
+  const handleClickOpen = (friend) => {
+    setSelectedFriend(friend);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedFriend(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedFriend) {
+      // Logic để xóa bạn
+      const res = await rejectFriendRequest(accessToken, selectedFriend.id); // Hoặc hàm xóa bạn của bạn
+      if (res?.EC === 200) {
+        toast.success("Xóa bạn thành công");
+        const newFriendList = friendList.filter((friend) => friend.id !== selectedFriend.id);
+        setFriendList(newFriendList);
+        socket.emit("removeFriend", { friendId: selectedFriend.id });
+        handleClose();
+      }
     }
   };
 
@@ -161,7 +197,7 @@ export default function Friend() {
       console.log(data);
     });
     socket.on("notificationFriend", () => {
-      if (selectedIndex === 1) {
+      if (selectedIndex == 1) {
         const fetchFriendsRequest = async () => {
           const res = await getFriendsRequest(accessToken, page, PER_PAGE);
           console.log(res.data);
@@ -214,6 +250,15 @@ export default function Friend() {
           );
           if (res4?.EC === 200) {
             setFriendList(res4.data);
+          }
+          break;
+        case 5:
+          setPage(1);
+          const res5 = await getFriendList(accessToken, 1, PER_PAGE);
+          if (res5?.EC === 200) {
+            console.log(res5.data);
+            setCountFriend(res5.data.totalFriends);
+            setFriendList(res5.data.friends);
           }
           break;
         default:
@@ -311,6 +356,24 @@ export default function Friend() {
                 <ListItemText primary="Bạn cùng khoa, cùng khóa" />
               </ListItemButton>
             </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton
+                className={`${classes.listItem} ${
+                  selectedIndex === 5 ? classes.selectedListItem : ""
+                }`}
+                selected={selectedIndex === 5}
+                onClick={() => handleListItemClick(5)}
+              >
+                <ListItemIcon>
+                  <Group />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Danh sách bạn bè
+                "
+                />
+              </ListItemButton>
+            </ListItem>
           </List>
         </Box>
         <Container className={classes.content}>
@@ -393,6 +456,16 @@ export default function Friend() {
               </Box>
             </>
           )}
+           {selectedIndex === 5 &&  <> 
+            <Box
+              style={{
+                borderBottom: "1px solid #e0e0e0",
+                marginBottom: "16px",
+              }}
+            >
+              <Typography variant="h5">Danh sách bạn bè : {countFriend}</Typography>
+            </Box>
+           </>}
           <Grid container spacing={3}>
             {friendList.map((friend, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
@@ -408,16 +481,18 @@ export default function Friend() {
                     >
                       <Avatar
                         alt={
-                          selectedIndex == 1 ? friend.user?.name : friend?.name
+                          selectedIndex == 1 || selectedIndex == 5
+                            ? friend.user?.name
+                            : friend?.name
                         }
                         src={
-                          selectedIndex == 1
+                          selectedIndex == 1 || selectedIndex == 5
                             ? friend.user?.avatarUrl
                             : friend?.avatarUrl
                         }
                         className={classes.avatar}
                         onClick={() => {
-                          if (selectedIndex == 1) {
+                          if (selectedIndex == 1 || selectedIndex == 5) {
                             navigate(`/profilepage/${friend.user?.id}`);
                           } else {
                             navigate(`/profilepage/${friend.id}`);
@@ -425,7 +500,9 @@ export default function Friend() {
                         }}
                       />
                       <Typography variant="h6">
-                        {selectedIndex == 1 ? friend.user?.name : friend?.name}
+                        {selectedIndex == 1 || selectedIndex == 5
+                          ? friend.user?.name
+                          : friend?.name}
                       </Typography>
                     </Box>
 
@@ -439,25 +516,26 @@ export default function Friend() {
                     >
                       <Typography variant="12px">
                         MSSV:{" "}
-                        {selectedIndex == 1
+                        {selectedIndex == 1 || selectedIndex == 5
                           ? friend?.user?.studentId
                           : friend?.studentId}{" "}
                       </Typography>
                       <Typography variant="12px">
                         Lớp:{" "}
-                        {selectedIndex == 1
+                        {selectedIndex == 1 || selectedIndex == 5
                           ? friend?.user?.class
                           : friend?.class}
                       </Typography>
                       <Typography variant="12px">
                         Đến từ:{" "}
-                        {friend?.user?.city && selectedIndex == 1
-                          ? friend.user.city
-                          : friend.city}
+                        {(friend?.user?.city && selectedIndex == 1) ||
+                        selectedIndex == 5
+                          ? friend.user?.city
+                          : friend?.city}
                       </Typography>
                     </Box>
 
-                    {selectedIndex != 1 ? (
+                    {selectedIndex != 1 && selectedIndex != 5 ? (
                       <Box display="flex" justifyContent="center" mt={2}>
                         <Button
                           variant="contained"
@@ -467,7 +545,7 @@ export default function Friend() {
                           Thêm bạn
                         </Button>
                       </Box>
-                    ) : (
+                    ) : selectedIndex != 5 ? (
                       <>
                         <Box
                           display="flex"
@@ -490,6 +568,18 @@ export default function Friend() {
                           </Button>
                         </Box>
                       </>
+                    ) :(
+                      <Box display="flex" justifyContent="center" mt={2}>
+                        <Button
+                          variant="contained"
+                          color="danger"
+                          onClick={() => {
+                            console.log(friend);
+                            handleClickOpen(friend)}} // Mở modal
+                        >
+                          Xoá bạn
+                        </Button>
+                      </Box>
                     )}
                   </CardContent>
                 </Card>
@@ -498,6 +588,28 @@ export default function Friend() {
           </Grid>
         </Container>
       </div>
+
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Xác nhận xóa bạn"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Bạn có chắc chắn muốn xóa bạn {selectedFriend?.name} không?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Hủy
+          </Button>
+          <Button onClick={handleConfirmDelete} color="secondary" autoFocus>
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
