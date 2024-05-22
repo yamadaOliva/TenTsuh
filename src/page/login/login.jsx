@@ -59,20 +59,16 @@ const WrappedView = () => {
     }
 
     const IsLogin = localStorage.getItem("IsLogin");
-    if (activeAccount && !IsLogin ) {
+    if (activeAccount && !IsLogin) {
       console.log(activeAccount);
       const data = {
         email: activeAccount.username,
         name: activeAccount.name,
       };
-    
+
       loginOffice(data);
-
-    } 
-   
+    }
   }, [activeAccount]);
-
-  
 
   const handleLogin = () => {
     instance
@@ -160,6 +156,7 @@ export default function Login({ instance }) {
     padding: 20,
     height: "55vh",
     width: 400,
+    height: "auto",
   };
   const textfieldStyle = {
     margin: "20px auto",
@@ -177,7 +174,7 @@ export default function Login({ instance }) {
     <>
       <section className="auth">
         <Grid>
-          <Paper elevation={10} style={paperStyle}>
+          <Paper elevation={6} style={paperStyle}>
             <Grid align="center">
               <Avatar src="iconHust.png"></Avatar>
               <h2 className="mt-4">Chào mừng đến với TenTsuh</h2>

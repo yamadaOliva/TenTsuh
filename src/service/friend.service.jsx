@@ -44,12 +44,41 @@ const addFriendRequest = (accessToken, idTarget) => {
       },
     }
   );
-}
+};
 
+const acceptFriendRequest = (accessToken, id) => {
+  return axios.put(
+    `/friend/accept`,
+    {
+      idRequest: id,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+};
+
+const rejectFriendRequest = (accessToken, id) => {
+  return axios.put(
+    `/friend/reject`,
+    {
+      idRequest: id,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+};
 export {
   getFriendsRequest,
   getCountryman,
   searchFriendRequest,
   filterFriendRequest,
   addFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
 };

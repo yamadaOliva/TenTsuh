@@ -29,6 +29,8 @@ import {
   searchFriendRequest,
   filterFriendRequest,
   addFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
 } from "../../service/friend.service";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -116,9 +118,11 @@ export default function Friend() {
     if (res?.EC === 200) {
       // Add the new friend to the friendList
       toast.success("Đã gửi lời mời kết bạn");
-      socket.emit("addFriend", {friendId});
+      socket.emit("addFriend", { friendId });
       //pop
-      const newFriendList = friendList.filter((friend) => friend.id !== friendId);
+      const newFriendList = friendList.filter(
+        (friend) => friend.id !== friendId
+      );
       setFriendList(newFriendList);
     }
   };
@@ -128,6 +132,26 @@ export default function Friend() {
     console.log(res.data);
     if (res?.EC === 200) {
       setFriendList(res.data);
+    }
+  };
+
+  const handleAcceptFriend = async (id) => {
+    const res = await acceptFriendRequest(accessToken, id);
+    console.log(res);
+    if (res?.EC === 200) {
+      toast.success("Chấp nhận lời mời kết bạn thành công");
+      const newFriendList = friendList.filter((friend) => friend.id !== id);
+      setFriendList(newFriendList);
+    }
+  };
+
+  const handleRejectFriend = async (id) => {
+    const res = await rejectFriendRequest(accessToken, id);
+    console.log(res);
+    if (res?.EC === 200) {
+      toast.success("Từ chối lời mời kết bạn thành công");
+      const newFriendList = friendList.filter((friend) => friend.id !== id);
+      setFriendList(newFriendList);
     }
   };
 
@@ -450,10 +474,18 @@ export default function Friend() {
                           justifyContent="space-between"
                           mt={2}
                         >
-                          <Button variant="contained" color="primary">
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleAcceptFriend(friend.id)}
+                          >
                             Chấp nhận
                           </Button>
-                          <Button variant="contained" color="secondary">
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => handleRejectFriend(friend.id)}
+                          >
                             Từ chối
                           </Button>
                         </Box>
