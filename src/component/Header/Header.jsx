@@ -73,7 +73,7 @@ export default function Header({ data }) {
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
   const [friends, setFriends] = React.useState([]);
   const [friendsMenuAnchorEl, setFriendsMenuAnchorEl] = React.useState(null);
-  
+
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -81,11 +81,11 @@ export default function Header({ data }) {
   const handleMobileMenuClose = () => {
     setMobileMoreAnchorEl(null);
   };
-  
+
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -108,17 +108,19 @@ export default function Header({ data }) {
   const fetchFriends = async () => {
     const response = await getFriendsRequest(accessToken, 1, 1000);
     setFriends(response.data);
-  }
+  };
 
   React.useEffect(() => {
     fetchFriends();
   }, []);
 
   React.useEffect(() => {
-    socket.emit("join", `user_${data.id}`);
-    socket.on("notificationFriend", () => {
-      fetchFriends();
-    });
+    if (data?.id) {
+      socket.emit("join", `user_${data?.id}`);
+      socket.on("notificationFriend", () => {
+        fetchFriends();
+      });
+    }
   }, [data]);
 
   const handleFriendsMenuOpen = (event) => {

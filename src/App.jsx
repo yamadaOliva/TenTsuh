@@ -8,7 +8,11 @@ import Header from "./component/Header/Header";
 import { Outlet } from "react-router-dom";
 import { refreshToken } from "./service/auth.service";
 import { getMe } from "./service/user.service";
-import { setAccessToken, setRefreshToken ,setInfo } from "./redux/Slice/user-slice";
+import {
+  setAccessToken,
+  setRefreshToken,
+  setInfo,
+} from "./redux/Slice/user-slice";
 
 function App() {
   const [data, setData] = useState({});
@@ -54,7 +58,7 @@ function App() {
   return (
     <>
       {" "}
-      <Header data={data} />
+      {data && data.id && <Header data={data} />}
       <section className="body__container">
         <Outlet />
       </section>

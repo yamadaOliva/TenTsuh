@@ -130,7 +130,7 @@ export default function Friend() {
       toast.success("Đã gửi lời mời kết bạn");
       socket.emit("addFriend", { friendId });
       //pop
-     const newFriendList = friendList.filter(
+      const newFriendList = friendList.filter(
         (friend) => friend.id !== friendId
       );
       setFriendList(newFriendList);
@@ -183,7 +183,9 @@ export default function Friend() {
       const res = await rejectFriendRequest(accessToken, selectedFriend.id); // Hoặc hàm xóa bạn của bạn
       if (res?.EC === 200) {
         toast.success("Xóa bạn thành công");
-        const newFriendList = friendList.filter((friend) => friend.id !== selectedFriend.id);
+        const newFriendList = friendList.filter(
+          (friend) => friend.id !== selectedFriend.id
+        );
         setFriendList(newFriendList);
         socket.emit("removeFriend", { friendId: selectedFriend.id });
         handleClose();
@@ -456,16 +458,20 @@ export default function Friend() {
               </Box>
             </>
           )}
-           {selectedIndex === 5 &&  <> 
-            <Box
-              style={{
-                borderBottom: "1px solid #e0e0e0",
-                marginBottom: "16px",
-              }}
-            >
-              <Typography variant="h5">Danh sách bạn bè : {countFriend}</Typography>
-            </Box>
-           </>}
+          {selectedIndex === 5 && (
+            <>
+              <Box
+                style={{
+                  borderBottom: "1px solid #e0e0e0",
+                  marginBottom: "16px",
+                }}
+              >
+                <Typography variant="h5">
+                  Danh sách bạn bè : {countFriend}
+                </Typography>
+              </Box>
+            </>
+          )}
           <Grid container spacing={3}>
             {friendList.map((friend, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
@@ -514,19 +520,19 @@ export default function Friend() {
                         flexDirection: "column",
                       }}
                     >
-                      <Typography variant="12px">
+                      <Typography variant="subtitle1">
                         MSSV:{" "}
                         {selectedIndex == 1 || selectedIndex == 5
                           ? friend?.user?.studentId
                           : friend?.studentId}{" "}
                       </Typography>
-                      <Typography variant="12px">
+                      <Typography variant="subtitle1">
                         Lớp:{" "}
                         {selectedIndex == 1 || selectedIndex == 5
                           ? friend?.user?.class
                           : friend?.class}
                       </Typography>
-                      <Typography variant="12px">
+                      <Typography variant="subtitle1">
                         Đến từ:{" "}
                         {(friend?.user?.city && selectedIndex == 1) ||
                         selectedIndex == 5
@@ -568,14 +574,15 @@ export default function Friend() {
                           </Button>
                         </Box>
                       </>
-                    ) :(
+                    ) : (
                       <Box display="flex" justifyContent="center" mt={2}>
                         <Button
                           variant="contained"
-                          color="danger"
+                          color="secondary"
                           onClick={() => {
                             console.log(friend);
-                            handleClickOpen(friend)}} // Mở modal
+                            handleClickOpen(friend);
+                          }} // Mở modal
                         >
                           Xoá bạn
                         </Button>
