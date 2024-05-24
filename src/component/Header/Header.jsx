@@ -15,6 +15,7 @@ import MailIcon from "@mui/icons-material/Mail";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Avatar from "@mui/material/Avatar";
 import PropTypes from "prop-types";
+import NotificationUnit from "./NotificationUnit";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/Slice/user-slice";
 import { useNavigate } from "react-router-dom";
@@ -22,8 +23,16 @@ import { People } from "@material-ui/icons";
 import { socket } from "../../socket";
 import { getFriendsRequest } from "../../service/friend.service";
 import { useSelector } from "react-redux";
+import {
+  acceptFriendRequest,
+  rejectFriendRequest,
+} from "../../service/friend.service";
+import {
+  getNotifications,
+  readNotification,
+} from "../../service/notification.service";
 import FriendRequestUnit from "./FriendRequestUnit";
-
+import { toast } from "react-toastify";
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -73,9 +82,11 @@ export default function Header({ data }) {
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
   const [friends, setFriends] = React.useState([]);
   const [friendsMenuAnchorEl, setFriendsMenuAnchorEl] = React.useState(null);
-
+  const [notificationsMenuAnchorEl, setNotificationsMenuAnchorEl] =
+    React.useState(null);
+  const [notifications, setNotifications] = React.useState([]);
   const handleProfileMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+    setAnchorEl(event?.currentTarget);
   };
 
   const handleMobileMenuClose = () => {
@@ -83,7 +94,7 @@ export default function Header({ data }) {
   };
 
   const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
+    setAnchorEl(event?.currentTarget);
   };
 
   const handleClose = () => {
@@ -107,36 +118,69 @@ export default function Header({ data }) {
 
   const fetchFriends = async () => {
     const response = await getFriendsRequest(accessToken, 1, 1000);
-    setFriends(response.data);
+    if (+response.EC === 200) {
+      setFriends(response.data);
+    }
   };
 
+  const fetchNotifications = async () => {
+    const response = await getNotifications(accessToken, 1, 1000);
+    if (+response.EC === 200) {
+      setNotifications(response.data);
+    }
+  };
   React.useEffect(() => {
     fetchFriends();
+    fetchNotifications();
   }, []);
 
   React.useEffect(() => {
     if (data?.id) {
       socket.emit("join", `user_${data?.id}`);
-      socket.on("notificationFriend", () => {
-        fetchFriends();
+      socket.on("notificationFriend", async (data) => {
+        console.log("lelelelelle", data);
+        if (data?.type == "accept") {
+          await fetchNotifications();
+        }
+        await fetchFriends();
       });
     }
   }, [data]);
 
   const handleFriendsMenuOpen = (event) => {
-    setFriendsMenuAnchorEl(event.currentTarget);
+    setFriendsMenuAnchorEl(event?.currentTarget);
   };
 
   const handleFriendsMenuClose = () => {
     setFriendsMenuAnchorEl(null);
   };
 
-  const handleAcceptFriend = (id) => {
-    // Logic để chấp nhận lời mời kết bạn
+  const handleNotificationsMenuOpen = async (event) => {
+    setNotificationsMenuAnchorEl(event?.currentTarget);
+    setNotifications(
+      notifications.map((item) => {
+        return { ...item, status: "READ" };
+      })
+    );
+    await readNotification(accessToken);
   };
 
-  const handleRejectFriend = (id) => {
-    // Logic để từ chối lời mời kết bạn
+  const handleNotificationsMenuClose = () => {
+    setNotificationsMenuAnchorEl(null);
+  };
+
+  const handleAcceptFriend = async (id) => {
+    const res = await acceptFriendRequest(accessToken, id);
+    if (+res.EC === 200) {
+      toast.success("Đã chấp nhận lời mời kết bạn");
+    }
+  };
+
+  const handleRejectFriend = async (id) => {
+    const res = await rejectFriendRequest(accessToken, id);
+    if (+res.EC === 200) {
+      toast.success("Đã từ chối lời mời kết bạn");
+    }
   };
 
   const mobileMenuId = "primary-search-account-menu-mobile";
@@ -186,7 +230,7 @@ export default function Header({ data }) {
         >
           <AccountCircle />
         </IconButton>
-        <p>Profile</p>
+        Profile
       </MenuItem>
     </Menu>
   );
@@ -246,10 +290,16 @@ export default function Header({ data }) {
           </IconButton>
           <IconButton
             size="large"
-            aria-label="show 17 new notifications"
+            aria-label="show new notifications"
             color="inherit"
+            onClick={handleNotificationsMenuOpen}
           >
-            <Badge badgeContent={17} color="error">
+            <Badge
+              badgeContent={
+                notifications.filter((item) => item.status == "UNREAD").length
+              }
+              color="error"
+            >
               <NotificationsIcon />
             </Badge>
           </IconButton>
@@ -304,6 +354,30 @@ export default function Header({ data }) {
           ))
         ) : (
           <MenuItem>Không có lời mời kết bạn nào</MenuItem>
+        )}
+      </Menu>
+      <Menu
+        anchorEl={notificationsMenuAnchorEl}
+        open={Boolean(notificationsMenuAnchorEl)}
+        onClose={handleNotificationsMenuClose}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        style={{ marginTop: 30, maxHeight: "500px" }}
+      >
+        {notifications.length > 0 ? (
+          notifications.map((notification) => (
+            <Box key={notification.id}>
+              <NotificationUnit data={notification} />
+            </Box>
+          ))
+        ) : (
+          <MenuItem>Không có thông báo nào</MenuItem>
         )}
       </Menu>
     </AppBar>

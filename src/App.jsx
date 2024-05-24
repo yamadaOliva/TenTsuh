@@ -28,7 +28,6 @@ function App() {
     const fetchMe = async () => {
       const res = await getMe(accessToken);
       if (res?.EC === 200) {
-        console.log(res.data);
         setData(res.data);
         dispatch(setInfo(res.data));
       } else {

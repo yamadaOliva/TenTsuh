@@ -145,7 +145,7 @@ export default function Friend() {
     }
   };
 
-  const handleAcceptFriend = async (id) => {
+  const handleAcceptFriend = async (id, friendId) => {
     const res = await acceptFriendRequest(accessToken, id);
     console.log(res);
     if (res?.EC === 200) {
@@ -153,6 +153,7 @@ export default function Friend() {
       const newFriendList = friendList.filter((friend) => friend.id !== id);
       setFriendList(newFriendList);
       socket.emit("addFriend", { friendId: myId });
+      socket.emit("addFriend", { friendId: friendId, type: "accept" });
     }
   };
 
@@ -561,7 +562,9 @@ export default function Friend() {
                           <Button
                             variant="contained"
                             color="primary"
-                            onClick={() => handleAcceptFriend(friend.id)}
+                            onClick={() =>
+                              handleAcceptFriend(friend.id, friend.user.id)
+                            }
                           >
                             Chấp nhận
                           </Button>

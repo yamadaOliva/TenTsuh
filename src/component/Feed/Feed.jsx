@@ -19,7 +19,7 @@ const Feed = () => {
           const res = await getPotsOfUser(id);
           console.log(res.data);
           setPosts(res.data);
-        }else{
+        } else {
           const res = await getPotsOfUser(userId);
           console.log(res.data);
           setPosts(res.data);

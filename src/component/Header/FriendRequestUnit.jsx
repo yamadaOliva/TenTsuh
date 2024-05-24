@@ -10,13 +10,14 @@ import {
 } from "@mui/material";
 
 export default function FriendRequestUnit({ friend, onAccept, onReject }) {
-  console.log(friend);
   return (
-    <Card sx={{ 
+    <Card
+      sx={{
         minWidth: 225,
         shadow: 2,
         borderBottom: "1px solid #e0e0e0",
-     }}>
+      }}
+    >
       <CardContent
         sx={{
           display: "flex",
@@ -56,7 +57,6 @@ export default function FriendRequestUnit({ friend, onAccept, onReject }) {
         sx={{
           display: "flex",
           justifyContent: "center",
-          
         }}
       >
         <Button
