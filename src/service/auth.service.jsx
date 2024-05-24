@@ -10,9 +10,8 @@ const register = (data) => {
   return axios.post("/auth/register", data);
 };
 const refreshToken = (refresh_token) => {
-  return axios.post("/auth/refresh-token", {
-    refresh_token: refresh_token,
-  });
+  axios.defaults.headers.common["Authorization"] = `Bearer ${refresh_token}`;
+  return axios.post("/auth/refreshToken");
 };
 
 const login365 = (data) => {
