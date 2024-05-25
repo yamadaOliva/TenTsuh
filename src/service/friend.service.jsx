@@ -81,7 +81,15 @@ const getFriendList = (accessToken, page, perpage) => {
       Authorization: `Bearer ${accessToken}`,
     },
   });
-}
+};
+
+const getListOnlineFriend = (accessToken, page, perpage) => {
+  return axios.get(`/friend/list/online/${page}/${perpage}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
 
 export {
   getFriendsRequest,
@@ -92,4 +100,5 @@ export {
   acceptFriendRequest,
   rejectFriendRequest,
   getFriendList,
+  getListOnlineFriend,
 };

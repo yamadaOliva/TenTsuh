@@ -62,7 +62,7 @@ export default function FriendRequestUnit({ friend, onAccept, onReject }) {
         <Button
           size="small"
           color="primary"
-          onClick={() => onAccept(friend.id)}
+          onClick={() => onAccept(friend.id, friend.user.id)}
         >
           Đồng ý
         </Button>

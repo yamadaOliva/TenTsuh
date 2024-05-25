@@ -115,12 +115,8 @@ const RightbarV2 = () => {
               >
                 Kết bạn
               </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleFollow}
-              >
-               Theo dõi
+              <Button variant="outlined" color="primary" onClick={handleFollow}>
+                Theo dõi
               </Button>
             </Box>
           </Grid>

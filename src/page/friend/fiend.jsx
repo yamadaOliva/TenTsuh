@@ -128,7 +128,7 @@ export default function Friend() {
     if (res?.EC === 200) {
       // Add the new friend to the friendList
       toast.success("Đã gửi lời mời kết bạn");
-      socket.emit("addFriend", { friendId });
+      await socket.emit("addFriend", { friendId });
       //pop
       const newFriendList = friendList.filter(
         (friend) => friend.id !== friendId
@@ -200,7 +200,10 @@ export default function Friend() {
       console.log(data);
     });
     socket.on("notificationFriend", () => {
+      console.log("notificationFriend");
+      console.log(selectedIndex);
       if (selectedIndex == 1) {
+        console.log("fetch");
         const fetchFriendsRequest = async () => {
           const res = await getFriendsRequest(accessToken, page, PER_PAGE);
           console.log(res.data);
@@ -208,7 +211,10 @@ export default function Friend() {
             setFriendList(res.data);
           }
         };
+
         fetchFriendsRequest();
+      } else {
+        setSelectedIndex(1);
       }
     });
     const fetchFriendsRequest = async () => {

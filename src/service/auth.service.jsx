@@ -18,4 +18,8 @@ const login365 = (data) => {
   return axios.post("/auth/office365", data);
 };
 
-export { login, register, refreshToken, login365 };
+const logoutBE = (accessToken) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+  return axios.put("/auth/logout");
+};
+export { login, register, refreshToken, login365, logoutBE };

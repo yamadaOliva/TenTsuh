@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
@@ -13,13 +14,17 @@ import SendIcon from "@material-ui/icons/Send";
 import PhotoCamera from "@material-ui/icons/PhotoCamera";
 import InsertEmoticonIcon from "@material-ui/icons/InsertEmoticon";
 import IconButton from "@material-ui/core/IconButton";
+import { useSelector } from "react-redux";
+import emojiData from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+
 const useStyles = makeStyles({
   table: {
     minWidth: 650,
   },
   chatSection: {
     width: "100%",
-    height: "89.6vh",
+    height: "92.6vh",
   },
   headBG: {
     backgroundColor: "#e0e0e0",
@@ -28,7 +33,7 @@ const useStyles = makeStyles({
     borderRight: "1px solid #e0e0e0",
   },
   messageArea: {
-    height: "83.6vh",
+    height: "86.6vh",
     overflowY: "auto",
   },
   inputArea: {
@@ -38,17 +43,31 @@ const useStyles = makeStyles({
 });
 
 const Chat = () => {
+  const me = useSelector((state) => state.user);
   const classes = useStyles();
+  const [messages, setMessages] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const handleSendMessage = () => {
+    if (currentMessage.trim() !== "") {
+      setMessages([
+        ...messages,
+        {
+          text: currentMessage,
+          fromUserId: me.Id,
+          time: new Date().toLocaleTimeString(),
+        },
+      ]);
+      setCurrentMessage("");
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setCurrentMessage(e.target.value);
+  };
 
   return (
     <div>
-      <Grid container>
-        <Grid item xs={12}>
-          <Typography variant="h5" className="header-message">
-            Chat
-          </Typography>
-        </Grid>
-      </Grid>
       <Grid container component={Paper} className={classes.chatSection}>
         <Grid item xs={3} className={classes.borderRight500}>
           <List>
@@ -56,10 +75,10 @@ const Chat = () => {
               <ListItemIcon>
                 <Avatar
                   alt="Remy Sharp"
-                  src="https://material-ui.com/static/images/avatar/1.jpg"
+                  src={me.avatarUrl || "https://via.placeholder.com/150"}
                 />
               </ListItemIcon>
-              <ListItemText primary="John Wick"></ListItemText>
+              <ListItemText primary={me.name}></ListItemText>
             </ListItem>
           </List>
           <Divider />
@@ -105,59 +124,59 @@ const Chat = () => {
         </Grid>
         <Grid item xs={9}>
           <List className={classes.messageArea}>
-            <ListItem key="1">
-              <Grid container>
-                <Grid item xs={12}>
-                  <ListItemText
-                    align="right"
-                    primary="Hey man, What's up ?"
-                  ></ListItemText>
+            {messages.map((message, index) => (
+              <ListItem key={index}>
+                <Grid container>
+                  <Grid item xs={12}>
+                    <ListItemText
+                      align={message.fromUserId === me.Id ? "right" : "left"}
+                      primary={message.text}
+                    ></ListItemText>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <ListItemText
+                      align={message.fromUserId === me.Id ? "right" : "left"}
+                      secondary={message.time}
+                    ></ListItemText>
+                  </Grid>
                 </Grid>
-                <Grid item xs={12}>
-                  <ListItemText align="right" secondary="09:30"></ListItemText>
-                </Grid>
-              </Grid>
-            </ListItem>
-            <ListItem key="2">
-              <Grid container>
-                <Grid item xs={12}>
-                  <ListItemText
-                    align="left"
-                    primary="Hey, Iam Good! What about you ?"
-                  ></ListItemText>
-                </Grid>
-                <Grid item xs={12}>
-                  <ListItemText align="left" secondary="09:31"></ListItemText>
-                </Grid>
-              </Grid>
-            </ListItem>
-            <ListItem key="3">
-              <Grid container>
-                <Grid item xs={12}>
-                  <ListItemText
-                    align="right"
-                    primary="Cool. i am good, let's catch up!"
-                  ></ListItemText>
-                </Grid>
-                <Grid item xs={12}>
-                  <ListItemText align="right" secondary="10:30"></ListItemText>
-                </Grid>
-              </Grid>
-            </ListItem>
+              </ListItem>
+            ))}
           </List>
           <Divider />
           <Grid item xs={12} className={classes.inputArea}>
             <IconButton color="primary" component="span">
               <PhotoCamera />
             </IconButton>
-            <IconButton color="primary">
+            <IconButton
+              color="primary"
+              component="span"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
               <InsertEmoticonIcon />
             </IconButton>
+            {showEmojiPicker && (
+              <div className="absolute bottom-10 right-0">
+                <Picker
+                  data={emojiData}
+                  onEmojiSelect={(e) => {
+                    //console.log(e);
+                    setCurrentMessage(currentMessage + e.native);
+                  }}
+                />
+              </div>
+            )}
             <TextField
-              id="outlined-basic-email"
               label="Nhập tin nhắn"
               fullWidth
               variant="outlined"
+              value={currentMessage}
+              onChange={handleInputChange}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleSendMessage();
+                }
+              }}
               style={{
                 marginLeft: "10px",
                 marginRight: "10px",
@@ -166,7 +185,8 @@ const Chat = () => {
             />
             <IconButton
               color="primary"
-              aria-label="add an alarm"
+              aria-label="send message"
+              onClick={handleSendMessage}
               style={{ marginRight: "10px", backgroundColor: "#f0f0f0" }}
             >
               <SendIcon />

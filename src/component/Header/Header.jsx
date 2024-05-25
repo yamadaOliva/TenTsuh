@@ -23,6 +23,7 @@ import { People } from "@material-ui/icons";
 import { socket } from "../../socket";
 import { getFriendsRequest } from "../../service/friend.service";
 import { useSelector } from "react-redux";
+import { logoutBE } from "../../service/auth.service";
 import {
   acceptFriendRequest,
   rejectFriendRequest,
@@ -106,9 +107,10 @@ export default function Header({ data }) {
     handleClose();
   };
 
-  const handleLogoutClick = () => {
+  const handleLogoutClick = async () => {
     handleClose();
     dispatch(logout());
+    await logoutBE(accessToken);
     const IsLogin = localStorage.getItem("IsLogin");
     if (IsLogin) {
       localStorage.setItem("Logout", true);
@@ -169,10 +171,14 @@ export default function Header({ data }) {
     setNotificationsMenuAnchorEl(null);
   };
 
-  const handleAcceptFriend = async (id) => {
+  const handleAcceptFriend = async (id, friendId) => {
     const res = await acceptFriendRequest(accessToken, id);
     if (+res.EC === 200) {
       toast.success("Đã chấp nhận lời mời kết bạn");
+      await socket.emit("addFriend", { friendId: friendId, type: "accept" });
+      await socket.emit("addFriend", { friendId: data.id, type: "accept" });
+      const newFriends = friends.filter((item) => item.id !== id);
+      setFriends(newFriends);
     }
   };
 
@@ -180,6 +186,9 @@ export default function Header({ data }) {
     const res = await rejectFriendRequest(accessToken, id);
     if (+res.EC === 200) {
       toast.success("Đã từ chối lời mời kết bạn");
+      await socket.emit("addFriend", { friendId: data.id, type: "reject" });
+      const newFriends = friends.filter((item) => item.id !== id);
+      setFriends(newFriends);
     }
   };
 
