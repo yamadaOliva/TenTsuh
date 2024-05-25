@@ -34,8 +34,6 @@ function App() {
         const res = await refreshToken(refresh_token);
         if (res?.EC === 200) {
           setToken(res.data.access_token, res.data.refresh_token);
-
-          //if in route / go to /home
           navigate("/home");
         } else {
           setToken("", "");

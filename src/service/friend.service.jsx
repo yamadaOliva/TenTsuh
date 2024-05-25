@@ -91,6 +91,13 @@ const getListOnlineFriend = (accessToken, page, perpage) => {
   });
 };
 
+const getFriendIdOrName = (accessToken, keyword,page,limit) => {
+  return axios.get(`friend/search/idorname/${page}/${limit}/${keyword}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
 export {
   getFriendsRequest,
   getCountryman,
@@ -101,4 +108,5 @@ export {
   rejectFriendRequest,
   getFriendList,
   getListOnlineFriend,
+  getFriendIdOrName,
 };

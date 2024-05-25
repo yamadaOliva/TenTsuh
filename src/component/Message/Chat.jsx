@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
@@ -17,6 +17,11 @@ import IconButton from "@material-ui/core/IconButton";
 import { useSelector } from "react-redux";
 import emojiData from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import _ from "lodash";
+import { getFriendIdOrName } from "../../service/friend.service";
+import { getFriendChatList } from "../../service/chat.service";
+import { Badge } from "@mui/material";
+import { green, grey } from "@mui/material/colors";
 
 const useStyles = makeStyles({
   table: {
@@ -42,13 +47,37 @@ const useStyles = makeStyles({
   },
 });
 
+const StyledBadge = ({ children, online }) => (
+  <Badge
+    overlap="circular"
+    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+    variant="dot"
+    sx={{
+      "& .MuiBadge-dot": {
+        backgroundColor: online ? green[400] : grey[400],
+        width: 12,
+        height: 12,
+        border: `2px solid white`,
+        borderRadius: "50%",
+      },
+    }}
+  >
+    {children}
+  </Badge>
+);
+
 const Chat = () => {
+  const LIMIT = 10;
   const me = useSelector((state) => state.user);
   const classes = useStyles();
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [chatList, setChatList] = useState([]); // [ {id, name, avatarUrl}
+  const [page, setPage] = useState(1);
   const handleSendMessage = () => {
+    console.log(currentMessage);
     if (currentMessage.trim() !== "") {
       setMessages([
         ...messages,
@@ -61,11 +90,34 @@ const Chat = () => {
       setCurrentMessage("");
     }
   };
-
   const handleInputChange = (e) => {
     setCurrentMessage(e.target.value);
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    debouncedSearch(e.target.value);
+  };
+
+  const debouncedSearch = useCallback(
+    _.debounce((query) => {
+      if (query === "") return;
+      getFriendIdOrName(me.accessToken, query, 1, 10).then((result) => {
+        setChatList(result.data);
+        console.log(result); // Handle result
+      });
+    }, 500),
+    []
+  );
+
+  useEffect(() => {
+    const fetchChatList = async () => {
+      const result = await getFriendChatList(me.accessToken, LIMIT, page);
+      console.log(result);
+      setChatList(result.data);
+    };
+    fetchChatList();
+  }, [page]);
   return (
     <div>
       <Grid container component={Paper} className={classes.chatSection}>
@@ -88,38 +140,43 @@ const Chat = () => {
               label="Search"
               variant="outlined"
               fullWidth
+              value={searchTerm}
+              onChange={handleSearchChange}
             />
           </Grid>
           <Divider />
           <List>
-            <ListItem button key="RemySharp">
-              <ListItemIcon>
-                <Avatar
-                  alt="Remy Sharp"
-                  src="https://material-ui.com/static/images/avatar/1.jpg"
-                />
-              </ListItemIcon>
-              <ListItemText primary="Remy Sharp">Remy Sharp</ListItemText>
-              <ListItemText secondary="online" align="right"></ListItemText>
-            </ListItem>
-            <ListItem button key="Alice">
-              <ListItemIcon>
-                <Avatar
-                  alt="Alice"
-                  src="https://material-ui.com/static/images/avatar/3.jpg"
-                />
-              </ListItemIcon>
-              <ListItemText primary="Alice">Alice</ListItemText>
-            </ListItem>
-            <ListItem button key="CindyBaker">
-              <ListItemIcon>
-                <Avatar
-                  alt="Cindy Baker"
-                  src="https://material-ui.com/static/images/avatar/2.jpg"
-                />
-              </ListItemIcon>
-              <ListItemText primary="Cindy Baker">Cindy Baker</ListItemText>
-            </ListItem>
+            {chatList &&
+              chatList.map((chat) => (
+                <ListItem button key={chat.id}>
+                  <ListItemIcon>
+                    <StyledBadge online={chat.online}>
+                      <Avatar
+                        alt={
+                          me.id === chat?.toUserId
+                            ? chat?.fromUser?.name
+                            : chat?.toUser?.name
+                        }
+                        src={
+                          me.id === chat?.toUserId
+                            ? chat?.fromUser?.avatarUrl
+                            : chat?.toUser?.avatarUrl
+                        }
+                      />
+                    </StyledBadge>
+                  </ListItemIcon>
+                  <ListItemText primary={chat.name}>
+                    {me.id === chat?.toUserId
+                      ? chat?.fromUser?.name
+                      : chat?.toUser?.name}
+                    <ListItemText primary={chat.name}>
+                      {me.id === chat?.toUserId
+                        ? chat?.fromUser?.studentId
+                        : chat?.toUser?.studentId}
+                    </ListItemText>
+                  </ListItemText>
+                </ListItem>
+              ))}
           </List>
         </Grid>
         <Grid item xs={9}>
@@ -154,18 +211,17 @@ const Chat = () => {
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             >
               <InsertEmoticonIcon />
+              {showEmojiPicker && (
+                <div className="absolute bottom-20">
+                  <Picker
+                    data={emojiData}
+                    onEmojiSelect={(e) => {
+                      setCurrentMessage(currentMessage + e.native);
+                    }}
+                  />
+                </div>
+              )}
             </IconButton>
-            {showEmojiPicker && (
-              <div className="absolute bottom-10 right-0">
-                <Picker
-                  data={emojiData}
-                  onEmojiSelect={(e) => {
-                    //console.log(e);
-                    setCurrentMessage(currentMessage + e.native);
-                  }}
-                />
-              </div>
-            )}
             <TextField
               label="Nhập tin nhắn"
               fullWidth
@@ -197,4 +253,5 @@ const Chat = () => {
     </div>
   );
 };
+
 export default Chat;
