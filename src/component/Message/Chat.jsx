@@ -17,12 +17,13 @@ import IconButton from "@material-ui/core/IconButton";
 import { useSelector } from "react-redux";
 import emojiData from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import Box from "@mui/material/Box";
 import _ from "lodash";
 import { getFriendIdOrName } from "../../service/friend.service";
 import { getFriendChatList } from "../../service/chat.service";
 import { Badge } from "@mui/material";
 import { green, grey } from "@mui/material/colors";
-
+import { useNavigate } from "react-router-dom";
 const useStyles = makeStyles({
   table: {
     minWidth: 650,
@@ -30,6 +31,8 @@ const useStyles = makeStyles({
   chatSection: {
     width: "100%",
     height: "92.6vh",
+    display: "flex",
+    flexDirection: "row",
   },
   headBG: {
     backgroundColor: "#e0e0e0",
@@ -38,8 +41,9 @@ const useStyles = makeStyles({
     borderRight: "1px solid #e0e0e0",
   },
   messageArea: {
-    height: "86.6vh",
+    height: "auto",
     overflowY: "auto",
+    height: "85%",
   },
   inputArea: {
     display: "flex",
@@ -67,15 +71,18 @@ const StyledBadge = ({ children, online }) => (
 );
 
 const Chat = () => {
+  const navigate = useNavigate();
   const LIMIT = 10;
   const me = useSelector((state) => state.user);
   const classes = useStyles();
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null); // {id, name, avatarUrl}
   const [searchTerm, setSearchTerm] = useState("");
   const [chatList, setChatList] = useState([]); // [ {id, name, avatarUrl}
   const [page, setPage] = useState(1);
+
   const handleSendMessage = () => {
     console.log(currentMessage);
     if (currentMessage.trim() !== "") {
@@ -110,14 +117,39 @@ const Chat = () => {
     []
   );
 
+  const handleSelectChat = (chat) => {
+    console.log(chat);
+    if (me.id === chat.toUserId) {
+      setCurrentUser({ ...chat.fromUser, online: chat.online });
+    } else {
+      setCurrentUser({ ...chat.toUser, online: chat.online });
+    }
+  };
+
   useEffect(() => {
     const fetchChatList = async () => {
       const result = await getFriendChatList(me.accessToken, LIMIT, page);
       console.log(result);
       setChatList(result.data);
+      console.log(me.id);
+      if (me.id === result.data[0]?.toUserId) {
+        setCurrentUser({
+          ...result.data[0]?.fromUser,
+          online: result.data[0]?.online,
+        });
+      } else {
+        setCurrentUser({
+          ...result.data[0]?.toUser,
+          online: result.data[0]?.online,
+        });
+      }
     };
     fetchChatList();
   }, [page]);
+
+  useEffect(() => {
+    console.log(currentUser);
+  }, [currentUser]);
   return (
     <div>
       <Grid container component={Paper} className={classes.chatSection}>
@@ -148,7 +180,11 @@ const Chat = () => {
           <List>
             {chatList &&
               chatList.map((chat) => (
-                <ListItem button key={chat.id}>
+                <ListItem
+                  button
+                  key={chat.id}
+                  onClick={() => handleSelectChat(chat)}
+                >
                   <ListItemIcon>
                     <StyledBadge online={chat.online}>
                       <Avatar
@@ -165,21 +201,86 @@ const Chat = () => {
                       />
                     </StyledBadge>
                   </ListItemIcon>
-                  <ListItemText primary={chat.name}>
-                    {me.id === chat?.toUserId
-                      ? chat?.fromUser?.name
-                      : chat?.toUser?.name}
-                    <ListItemText primary={chat.name}>
-                      {me.id === chat?.toUserId
-                        ? chat?.fromUser?.studentId
-                        : chat?.toUser?.studentId}
-                    </ListItemText>
-                  </ListItemText>
+                  <ListItemText
+                    primary={
+                      <span style={{ fontWeight: "bold" }}>
+                        {me.id === chat?.toUserId
+                          ? chat?.fromUser?.name
+                          : chat?.toUser?.name}{" "}
+                        (
+                        {me.id === chat?.toUserId
+                          ? chat?.fromUser?.studentId
+                          : chat?.toUser?.studentId}
+                        )
+                      </span>
+                    }
+                    secondary={
+                      <span
+                        style={{
+                          color:
+                            chat?.status === "UNREAD" && me.id != chat?.toUserId
+                              ? "black"
+                              : "grey",
+                          fontWeight:
+                            chat?.status === "UNREAD" && me.id != chat?.toUserId
+                              ? "bold"
+                              : "normal",
+                        }}
+                      >
+                        {`${me.id === chat?.toUserId ? "Bạn :" : ""} ${
+                          chat?.content
+                        }`}
+                      </span>
+                    }
+                  />
                 </ListItem>
               ))}
           </List>
         </Grid>
         <Grid item xs={9}>
+          {currentUser && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "10px 20px",
+                backgroundColor: "#f0f0f0",
+                borderBottom: "1px solid #ddd",
+              }}
+            >
+              <StyledBadge online={currentUser.online}>
+                <Avatar
+                  alt={currentUser.name}
+                  src={
+                    currentUser.avatarUrl || "https://via.placeholder.com/150"
+                  }
+                  onClick={() => {
+                    navigate(`/profilepage/${currentUser.id}`);
+                  }}
+                  style={{ cursor: "pointer" }}
+                />
+              </StyledBadge>
+              <Box
+                style={{
+                  marginLeft: "15px",
+                }}
+              >
+                {" "}
+                <Typography
+                  variant="subtitle1"
+                  component="div"
+                  style={{
+                    fontWeight: "bold",
+                  }}
+                >
+                  {currentUser.name} ({currentUser.studentId})
+                </Typography>
+                <Typography variant="subtitle2" component="div">
+                  {currentUser?.class}
+                </Typography>
+              </Box>
+            </div>
+          )}
           <List className={classes.messageArea}>
             {messages.map((message, index) => (
               <ListItem key={index}>
