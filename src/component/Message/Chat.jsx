@@ -149,27 +149,23 @@ const Chat = () => {
   };
 
   const handleSendChat = async () => {
-    if (currentMessage.trim() === "") return;
+    console.log("currentMessage", currentMessage);
+    if (currentMessage.trim() === "" && !image) return;
     const data = {
       toUserId: currentUser.id,
       content: currentMessage,
       fromUserId: me.id,
-      imgUrl: image,
+      imageUrl: image,
     };
     const result = await sendChat(me.accessToken, data);
-    console.log(result);
     if (result?.EC === 200) {
       setMessages([
         ...messages,
         {
-          content: currentMessage,
-          fromUserId: me.id,
-          createdAt: new Date().toISOString(),
-          imgUrl: image,
-          toUserId: currentUser.id,
+          ...result.data,
         },
       ]);
-      socket.emit("message", data);
+      socket.emit("message", result.data);
       const getChatListResult = await getFriendChatList(
         me.accessToken,
         LIMIT,
@@ -217,32 +213,34 @@ const Chat = () => {
     };
 
     fetchChatList();
-    socket.on("receive-message", async (data) => {
-      console.log("hehehehehhehehe", data);
-      console.log(currentUser);
-      if (data.fromUserId == currentUser?.id) {
-        setMessages([
-          ...messages,
-          {
-            content: data.content,
-            fromUserId: data.fromUserId,
-            createdAt: new Date().toISOString(),
-            imgUrl: data.imgUrl,
-            toUserId: data.toUserId,
-          },
-        ]);
-        const getChatListResult = await getFriendChatList(
-          me.accessToken,
-          LIMIT,
-          page
-        );
-        setChatList(getChatListResult.data);
-      }
-    });
   }, [page]);
 
   useEffect(() => {
-    console.log(currentUser);
+    const fetchChatList = async () => {
+      const res = await getChatList(me.accessToken, currentUser.id, LIMIT, pageChat);
+      console.log("dsfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf")
+      setMessages(res.data);
+    };
+    fetchChatList();
+    if (currentUser) {
+      const messageListener = async (data) => {
+        console.log("receive-message", currentUser, data);
+       if (currentUser.id == data?.fromUserId) setMessages((prevMessages) => [...prevMessages, data]);
+        const res = await getFriendChatList(me.accessToken, LIMIT, page);
+        setChatList(res.data);
+      };
+
+      if (currentUser) {
+        socket.on("receive-message", messageListener);
+      }
+
+      return () => {
+        if (currentUser) {
+          socket.off("receive-message", messageListener);
+        }
+      };
+    }
+    
   }, [currentUser]);
 
   useEffect(() => {
@@ -429,9 +427,10 @@ const Chat = () => {
                             }
                             primary={
                               <div>
-                                {message.imgUrl && (
+                                {message.content}
+                                {message.imageUrl && (
                                   <img
-                                    src={message.imgUrl}
+                                    src={message.imageUrl}
                                     alt="image"
                                     style={{
                                       width: "200px",
@@ -439,7 +438,6 @@ const Chat = () => {
                                     }}
                                   />
                                 )}
-                                {message.content}
                               </div>
                             }
                           ></ListItemText>
