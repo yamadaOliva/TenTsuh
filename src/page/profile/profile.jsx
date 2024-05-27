@@ -9,6 +9,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useTheme } from "@mui/material";
 import { toast } from "react-toastify";
 import { updateProfile } from "../../service/user.service";
+import dataJson from "../../assets/data/data.json";
 import "./profile.scss";
 import {
   Grid,
@@ -166,8 +167,10 @@ export default function Profile() {
         setCity(res.data.city);
         setDistrict(res.data.district);
       } else {
-        setCity(address.getCities()[0]);
-        setDistrict(address.getDistricts(address.getCities()[0])[0]);
+        setCity(address.getCities(dataJson)[0]);
+        setDistrict(
+          address.getDistricts(dataJson, address.getCities(dataJson)[0])[0]
+        );
       }
 
       console.log(res.data.Birthday, "res.data.birthday");
@@ -381,7 +384,10 @@ export default function Profile() {
                         fullWidth
                         onChange={(e) => {
                           setCity(e.target.value);
-                          setDistrict(address.getDistricts(e.target.value)[0]);
+                          setDistrict(
+                            dataJson,
+                            address.getDistricts(dataJson, e.target.value)[0]
+                          );
                           setIsSomethingChange(true);
                         }}
                         select
@@ -389,7 +395,7 @@ export default function Profile() {
                           native: true,
                         }}
                       >
-                        {address.getCities().map((item, key) => {
+                        {address.getCities(dataJson).map((item, key) => {
                           return (
                             <option key={key} value={item}>
                               {item}
@@ -421,13 +427,15 @@ export default function Profile() {
                         }}
                       >
                         {city &&
-                          address.getDistricts(city).map((item, key) => {
-                            return (
-                              <option key={key} value={item}>
-                                {item}
-                              </option>
-                            );
-                          })}
+                          address
+                            .getDistricts(dataJson, city)
+                            .map((item, key) => {
+                              return (
+                                <option key={key} value={item}>
+                                  {item}
+                                </option>
+                              );
+                            })}
                       </TextField>
                     </Grid>
                   </Grid>
@@ -456,7 +464,6 @@ export default function Profile() {
                             console.log(params, "params");
                             <TextField {...params} fullWidth />;
                           }}
-                          view="[day, month, year]"
                         />
                       </LocalizationProvider>
                     </Grid>

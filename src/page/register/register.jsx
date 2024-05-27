@@ -26,6 +26,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { address } from "../../utils";
+import dataJson from "../../assets/data/data.json";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -101,8 +102,8 @@ export default function Register() {
         setCurrentMajor(res.data[1]);
         setClassCount(res.data[1].classCount[0].schoolYear);
         setClassNumber(res.data[1].classCount[0].count);
-        let ptr = address.getCities();
-        console.log("dsfsdfsdfsf",ptr);
+        let ptr = address.getCities(dataJson);
+        console.log("dsfsdfsdfsf", ptr);
         setProvince(ptr);
         setCurrentProvince(ptr[0]);
         let ptr1 = address.getDistricts(ptr[0]);
@@ -114,14 +115,14 @@ export default function Register() {
     };
     get();
   }, []);
-  
+
   useEffect(() => {
     console.log(birthday);
   }, [birthday]);
 
   const getDistrict1 = () => {
     try {
-      let ptr = address.getDistricts(currentProvince);
+      let ptr = address.getDistricts(dataJson, currentProvince);
       console.log(ptr);
       console.log(currentProvince);
       setDistrict(ptr);
@@ -156,7 +157,7 @@ export default function Register() {
   const validate = () => {
     //check empty
     console.log(remember);
-    if(!remember){
+    if (!remember) {
       toast.error("Bạn chưa đồng ý với điều khoản sử dụng");
       return false;
     }
@@ -208,7 +209,7 @@ export default function Register() {
       toast.error("Mã sinh viên không khớp với email");
       return false;
     }
-    
+
     return true;
   };
   const handleSubmit = async (e) => {
@@ -299,13 +300,10 @@ export default function Register() {
                         }}
                         value={currentProvince}
                         onChange={(e) => {
-                          setCurrentProvince(
-                            e.target.value
-                          );
-                          
+                          setCurrentProvince(e.target.value);
                         }}
                       >
-                        {province.map((option , index) => (
+                        {province.map((option, index) => (
                           <option key={index} value={option}>
                             {option}
                           </option>
@@ -328,7 +326,7 @@ export default function Register() {
                         }}
                       >
                         {district?.length > 0 &&
-                          district.map((option , index) => {
+                          district.map((option, index) => {
                             return (
                               <option key={index} value={option}>
                                 {option}
@@ -372,7 +370,13 @@ export default function Register() {
                     </Grid>
                     <Grid item xs={12}>
                       <FormControlLabel
-                        control={<Checkbox name="checkedB" color="primary" value={remember}/>}
+                        control={
+                          <Checkbox
+                            name="checkedB"
+                            color="primary"
+                            value={remember}
+                          />
+                        }
                         label="Tôi đồng ý với điều khoản sử dụng"
                         fullWidth
                         onChange={(e) => setRemember(e.target.value)}

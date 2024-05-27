@@ -60,13 +60,13 @@ const useStyles = makeStyles((theme) => ({
   content: {
     flexGrow: 1,
     padding: theme.spacing(3),
-    margin: "0 auto", // Center the content
+    margin: "0 auto",
     backgroundColor: "#f5f5f5",
   },
   avatar: {
     width: theme.spacing(7),
     height: theme.spacing(7),
-    cursor: "pointer", // Add cursor pointer on hover
+    cursor: "pointer",
   },
   friendCard: {
     marginBottom: theme.spacing(2),

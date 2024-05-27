@@ -8,4 +8,18 @@ const getFriendChatList = (accessToken, limit, page) => {
     },
   });
 };
-export { getFriendChatList };
+
+const getChatList = (accessToken, targetId, limit, page) => {
+  return axios.get(`/chat/list/${targetId}/${page}/${limit}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+
+const sendChat = (accessToken, data) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+  return axios.post("/chat/send", data);
+};
+
+export { getFriendChatList, getChatList, sendChat };

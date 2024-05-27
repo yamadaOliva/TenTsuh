@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
@@ -20,10 +20,18 @@ import Picker from "@emoji-mart/react";
 import Box from "@mui/material/Box";
 import _ from "lodash";
 import { getFriendIdOrName } from "../../service/friend.service";
-import { getFriendChatList } from "../../service/chat.service";
+import {
+  getFriendChatList,
+  getChatList,
+  sendChat,
+} from "../../service/chat.service";
 import { Badge } from "@mui/material";
 import { green, grey } from "@mui/material/colors";
 import { useNavigate } from "react-router-dom";
+import { date } from "../../utils";
+import { socket } from "../../socket";
+import { current } from "@reduxjs/toolkit";
+// import InfiniteScroll from "react-infinite-scroll-component";
 const useStyles = makeStyles({
   table: {
     minWidth: 650,
@@ -41,9 +49,8 @@ const useStyles = makeStyles({
     borderRight: "1px solid #e0e0e0",
   },
   messageArea: {
-    height: "auto",
+    height: "79.1vh",
     overflowY: "auto",
-    height: "85%",
   },
   inputArea: {
     display: "flex",
@@ -74,7 +81,18 @@ const Chat = () => {
   const navigate = useNavigate();
   const LIMIT = 10;
   const me = useSelector((state) => state.user);
+
   const classes = useStyles();
+  const cloudinaryRef = useRef();
+  const widgetRef = useRef();
+  const messagesEndRef = useRef(null);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  };
+
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -82,18 +100,22 @@ const Chat = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [chatList, setChatList] = useState([]); // [ {id, name, avatarUrl}
   const [page, setPage] = useState(1);
-
+  const [pageChat, setPageChat] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [image, setImage] = useState("");
   const handleSendMessage = () => {
     console.log(currentMessage);
     if (currentMessage.trim() !== "") {
       setMessages([
         ...messages,
         {
-          text: currentMessage,
+          content: currentMessage,
           fromUserId: me.Id,
-          time: new Date().toLocaleTimeString(),
+          createdAt: new Date().toISOString(),
+          imgUrl: image,
         },
       ]);
+      setImage("");
       setCurrentMessage("");
     }
   };
@@ -126,6 +148,39 @@ const Chat = () => {
     }
   };
 
+  const handleSendChat = async () => {
+    if (currentMessage.trim() === "") return;
+    const data = {
+      toUserId: currentUser.id,
+      content: currentMessage,
+      fromUserId: me.id,
+      imgUrl: image,
+    };
+    const result = await sendChat(me.accessToken, data);
+    console.log(result);
+    if (result?.EC === 200) {
+      setMessages([
+        ...messages,
+        {
+          content: currentMessage,
+          fromUserId: me.id,
+          createdAt: new Date().toISOString(),
+          imgUrl: image,
+          toUserId: currentUser.id,
+        },
+      ]);
+      socket.emit("message", data);
+      const getChatListResult = await getFriendChatList(
+        me.accessToken,
+        LIMIT,
+        page
+      );
+      setChatList(getChatListResult.data);
+      setImage("");
+      setCurrentMessage("");
+    }
+  };
+
   useEffect(() => {
     const fetchChatList = async () => {
       const result = await getFriendChatList(me.accessToken, LIMIT, page);
@@ -137,19 +192,96 @@ const Chat = () => {
           ...result.data[0]?.fromUser,
           online: result.data[0]?.online,
         });
+        const chatResult = await getChatList(
+          me.accessToken,
+          result.data[0]?.fromUser.id,
+          LIMIT,
+          pageChat
+        );
+        console.log(chatResult);
+        setMessages(chatResult.data);
       } else {
         setCurrentUser({
           ...result.data[0]?.toUser,
           online: result.data[0]?.online,
         });
+        const chatResult = await getChatList(
+          me.accessToken,
+          result.data[0]?.toUser.id,
+          LIMIT,
+          pageChat
+        );
+        console.log(chatResult);
+        setMessages(chatResult.data);
       }
     };
+
     fetchChatList();
+    socket.on("receive-message", async (data) => {
+      console.log("hehehehehhehehe", data);
+      console.log(currentUser);
+      if (data.fromUserId == currentUser?.id) {
+        setMessages([
+          ...messages,
+          {
+            content: data.content,
+            fromUserId: data.fromUserId,
+            createdAt: new Date().toISOString(),
+            imgUrl: data.imgUrl,
+            toUserId: data.toUserId,
+          },
+        ]);
+        const getChatListResult = await getFriendChatList(
+          me.accessToken,
+          LIMIT,
+          page
+        );
+        setChatList(getChatListResult.data);
+      }
+    });
   }, [page]);
 
   useEffect(() => {
     console.log(currentUser);
   }, [currentUser]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    cloudinaryRef.current = window.cloudinary;
+    widgetRef.current = cloudinaryRef.current?.createUploadWidget(
+      {
+        cloudName: "subarasuy",
+        uploadPreset: "o4umo4il",
+        multiple: false,
+        sources: ["local", "url", "camera"],
+        maxFileSize: 5000000,
+      },
+      function (error, result) {
+        if (!error && result && result.event === "success") {
+          const fileExtension = result.info.format;
+          if (fileExtension !== "png" && fileExtension !== "jpg") {
+            toast.error("anh phải có định dạng jpg hoặc png");
+            return;
+          }
+          console.log(result.info.secure_url);
+          if (result.info?.secure_url?.startsWith("http")) {
+            setImage(result.info.secure_url);
+            if (props.setSomethingChange) {
+              props.setSomethingChange(true);
+            }
+          }
+        }
+      }
+    );
+    socket.emit("join", `user_${me.id}`);
+  }, []);
+
+  useEffect(() => {
+    console.log("chatList", messages);
+  }, [messages]);
   return (
     <div>
       <Grid container component={Paper} className={classes.chatSection}>
@@ -218,16 +350,18 @@ const Chat = () => {
                       <span
                         style={{
                           color:
-                            chat?.status === "UNREAD" && me.id != chat?.toUserId
+                            chat?.status === "UNREAD" &&
+                            me.id === chat?.toUserId
                               ? "black"
                               : "grey",
                           fontWeight:
-                            chat?.status === "UNREAD" && me.id != chat?.toUserId
+                            chat?.status === "UNREAD" &&
+                            me.id === chat?.toUserId
                               ? "bold"
                               : "normal",
                         }}
                       >
-                        {`${me.id === chat?.toUserId ? "Bạn :" : ""} ${
+                        {`${me.id != chat?.toUserId ? "Bạn :" : ""} ${
                           chat?.content
                         }`}
                       </span>
@@ -245,7 +379,6 @@ const Chat = () => {
                 alignItems: "center",
                 padding: "10px 20px",
                 backgroundColor: "#f0f0f0",
-                borderBottom: "1px solid #ddd",
               }}
             >
               <StyledBadge online={currentUser.online}>
@@ -282,28 +415,117 @@ const Chat = () => {
             </div>
           )}
           <List className={classes.messageArea}>
-            {messages.map((message, index) => (
-              <ListItem key={index}>
-                <Grid container>
-                  <Grid item xs={12}>
-                    <ListItemText
-                      align={message.fromUserId === me.Id ? "right" : "left"}
-                      primary={message.text}
-                    ></ListItemText>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <ListItemText
-                      align={message.fromUserId === me.Id ? "right" : "left"}
-                      secondary={message.time}
-                    ></ListItemText>
-                  </Grid>
-                </Grid>
-              </ListItem>
-            ))}
+            <div ref={messagesEndRef}>
+              {messages &&
+                me &&
+                messages.map((message, index) => {
+                  return (
+                    <ListItem key={index}>
+                      <Grid container>
+                        <Grid item xs={12}>
+                          <ListItemText
+                            align={
+                              message.fromUserId == me.id ? "right" : "left"
+                            }
+                            primary={
+                              <div>
+                                {message.imgUrl && (
+                                  <img
+                                    src={message.imgUrl}
+                                    alt="image"
+                                    style={{
+                                      width: "200px",
+                                      maxHeight: "200px",
+                                    }}
+                                  />
+                                )}
+                                {message.content}
+                              </div>
+                            }
+                          ></ListItemText>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <ListItemText
+                            align={
+                              message.fromUserId === me.id ? "right" : "left"
+                            }
+                            secondary={date.convertDateToTime(
+                              message.createdAt
+                            )}
+                          ></ListItemText>
+                        </Grid>
+                      </Grid>
+                    </ListItem>
+                  );
+                })}
+              {/* <InfiniteScroll
+                dataLength={messages.length}
+                next={() => {
+                  setPageChat(pageChat + 1);
+                }}
+                hasMore={hasMore}
+                loader={<h4>Loading...</h4>}
+                endMessage={
+                  <p style={{ textAlign: "center" }}>
+                    <b>Yay! You have seen it all</b>
+                  </p>
+                }
+                scrollableTarget="scrollableDiv"
+              >
+                {messages &&
+                  messages.map((message, index) => (
+                    <ListItem key={index}>
+                      <Grid container>
+                        <Grid item xs={12}>
+                          <ListItemText
+                            align={
+                              message.fromUserId === me.Id ? "right" : "left"
+                            }
+                            primary={message.content}
+                          ></ListItemText>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <ListItemText
+                            align={
+                              message.fromUserId === me.Id ? "right" : "left"
+                            }
+                            secondary={date.convertDateToTime(
+                              message.createdAt
+                            )}
+                          ></ListItemText>
+                        </Grid>
+                      </Grid>
+                    </ListItem>
+                  ))}
+              </InfiniteScroll> */}
+            </div>
           </List>
           <Divider />
+
           <Grid item xs={12} className={classes.inputArea}>
-            <IconButton color="primary" component="span">
+            {image && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "10px",
+                }}
+              >
+                <img
+                  src={image}
+                  alt="image"
+                  style={{ width: "100px", maxHeight: "100px" }}
+                />
+              </div>
+            )}
+            <IconButton
+              color="primary"
+              component="span"
+              onClick={() => {
+                widgetRef.current.open();
+              }}
+            >
               <PhotoCamera />
             </IconButton>
             <IconButton
@@ -331,19 +553,20 @@ const Chat = () => {
               onChange={handleInputChange}
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
-                  handleSendMessage();
+                  handleSendChat();
                 }
               }}
               style={{
                 marginLeft: "10px",
                 marginRight: "10px",
                 backgroundColor: "#f0f0f0",
+                marginBottom: "10px",
               }}
             />
             <IconButton
               color="primary"
               aria-label="send message"
-              onClick={handleSendMessage}
+              onClick={() => handleSendChat()}
               style={{ marginRight: "10px", backgroundColor: "#f0f0f0" }}
             >
               <SendIcon />

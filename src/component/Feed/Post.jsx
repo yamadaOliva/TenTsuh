@@ -10,7 +10,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import {date} from "../../utils/index";
+import { date } from "../../utils/index";
 const Post = ({ post }) => {
   return (
     <Card
