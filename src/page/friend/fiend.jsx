@@ -42,7 +42,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket";
 import { toast } from "react-toastify";
-
+import Header from "../../component/Header/Header";
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
@@ -301,6 +301,7 @@ export default function Friend() {
         backgroundPosition: "center",
       }}
     >
+      <Header />
       <div className={classes.root}>
         <CssBaseline />
         <Box className={classes.nav}>

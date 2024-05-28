@@ -55,7 +55,6 @@ function App() {
   return (
     <>
       {" "}
-      {data && data.id && <Header data={data} />}
       <section className="body__container">
         <Outlet />
       </section>

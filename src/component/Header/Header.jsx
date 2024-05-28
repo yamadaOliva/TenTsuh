@@ -64,7 +64,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: "inherit",
   "& .MuiInputBase-input": {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create("width"),
     width: "100%",
@@ -74,10 +73,10 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function Header({ data }) {
+export default function Header() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const accessToken = useSelector((state) => state.user.accessToken);
+  const me = useSelector((state) => state.user);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -110,7 +109,7 @@ export default function Header({ data }) {
   const handleLogoutClick = async () => {
     handleClose();
     dispatch(logout());
-    await logoutBE(accessToken);
+    await logoutBE(me.accessToken);
     const IsLogin = localStorage.getItem("IsLogin");
     if (IsLogin) {
       localStorage.setItem("Logout", true);
@@ -119,14 +118,14 @@ export default function Header({ data }) {
   };
 
   const fetchFriends = async () => {
-    const response = await getFriendsRequest(accessToken, 1, 1000);
+    const response = await getFriendsRequest(me.accessToken, 1, 1000);
     if (+response.EC === 200) {
       setFriends(response.data);
     }
   };
 
   const fetchNotifications = async () => {
-    const response = await getNotifications(accessToken, 1, 1000);
+    const response = await getNotifications(me.accessToken, 1, 1000);
     if (+response.EC === 200) {
       setNotifications(response.data);
     }
@@ -137,8 +136,8 @@ export default function Header({ data }) {
   }, []);
 
   React.useEffect(() => {
-    if (data?.id) {
-      socket.emit("join", `user_${data?.id}`);
+    if (me?.id) {
+      socket.emit("join", `user_${me?.id}`);
       socket.on("notificationFriend", async (data) => {
         console.log("lelelelelle", data);
         if (data?.type == "accept") {
@@ -147,7 +146,7 @@ export default function Header({ data }) {
         await fetchFriends();
       });
     }
-  }, [data]);
+  }, []);
 
   const handleFriendsMenuOpen = (event) => {
     setFriendsMenuAnchorEl(event?.currentTarget);
@@ -164,7 +163,7 @@ export default function Header({ data }) {
         return { ...item, status: "READ" };
       })
     );
-    await readNotification(accessToken);
+    await readNotification(me.accessToken);
   };
 
   const handleNotificationsMenuClose = () => {
@@ -172,7 +171,7 @@ export default function Header({ data }) {
   };
 
   const handleAcceptFriend = async (id, friendId) => {
-    const res = await acceptFriendRequest(accessToken, id);
+    const res = await acceptFriendRequest(me.accessToken, id);
     if (+res.EC === 200) {
       toast.success("Đã chấp nhận lời mời kết bạn");
       await socket.emit("addFriend", { friendId: friendId, type: "accept" });
@@ -183,7 +182,7 @@ export default function Header({ data }) {
   };
 
   const handleRejectFriend = async (id) => {
-    const res = await rejectFriendRequest(accessToken, id);
+    const res = await rejectFriendRequest(me.accessToken, id);
     if (+res.EC === 200) {
       toast.success("Đã từ chối lời mời kết bạn");
       await socket.emit("addFriend", { friendId: data.id, type: "reject" });
@@ -254,7 +253,7 @@ export default function Header({ data }) {
             navigate("/home");
           }}
         >
-          <Avatar src="iconHust.png"></Avatar>
+          <Avatar src="/iconHust.png" />
         </IconButton>
         <Typography
           variant="h6"
@@ -276,7 +275,7 @@ export default function Header({ data }) {
         <Box sx={{ flexGrow: 1 }} />
         <Box sx={{ display: { xs: "none", md: "flex" } }}>
           <Typography variant="body1" sx={{ margin: 2 }}>
-            Xin chào {data.name}
+            Xin chào {me.name}
           </Typography>
           <IconButton
             size="large"
@@ -314,14 +313,14 @@ export default function Header({ data }) {
           </IconButton>
         </Box>
 
-        {data && (
+        {me && (
           <>
             <IconButton
               color="inherit"
               onClick={handleMenuClick}
               sx={{ marginRight: 2 }}
             >
-              <Avatar alt="User Avatar" src={data.avatarUrl} />
+              <Avatar alt="User Avatar" src={me.avatarUrl} />
             </IconButton>
             <Menu
               anchorEl={anchorEl}

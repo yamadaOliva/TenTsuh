@@ -4,6 +4,7 @@ import Feed from "../../component/Feed/Feed";
 import Add from "../../component/Add/Add";
 import { Box, createTheme, ThemeProvider } from "@mui/material";
 import { useState } from "react";
+import Header from "../../component/Header/Header";
 export default function Home() {
   const [mode, setMode] = useState("light");
   const darkTheme = createTheme({
@@ -14,6 +15,7 @@ export default function Home() {
   return (
     <>
       <ThemeProvider theme={darkTheme}>
+        <Header />
         <Box
           sx={{ display: "flex" }}
           bgcolor={"#f0f0f1"}

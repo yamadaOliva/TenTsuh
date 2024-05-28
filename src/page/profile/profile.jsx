@@ -10,6 +10,7 @@ import { useTheme } from "@mui/material";
 import { toast } from "react-toastify";
 import { updateProfile } from "../../service/user.service";
 import dataJson from "../../assets/data/data.json";
+import Header from "../../component/Header/Header";
 import "./profile.scss";
 import {
   Grid,
@@ -192,6 +193,9 @@ export default function Profile() {
     getData();
   }, []);
   return (
+    <>
+      <Header />
+
     <section className="profile">
       <Grid container justifyContent="center" alignItems="center" height="100%">
         <Paper
@@ -559,5 +563,7 @@ export default function Profile() {
         </Paper>
       </Grid>
     </section>
+
+    </>
   );
 }

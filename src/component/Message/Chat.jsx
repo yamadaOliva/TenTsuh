@@ -30,8 +30,7 @@ import { green, grey } from "@mui/material/colors";
 import { useNavigate } from "react-router-dom";
 import { date } from "../../utils";
 import { socket } from "../../socket";
-import { current } from "@reduxjs/toolkit";
-// import InfiniteScroll from "react-infinite-scroll-component";
+import InfiniteScroll from "react-infinite-scroll-component";
 const useStyles = makeStyles({
   table: {
     minWidth: 650,
@@ -128,6 +127,17 @@ const Chat = () => {
     debouncedSearch(e.target.value);
   };
 
+  const fetchMoreData = async () => {
+    console.log("fetchMoreData");
+    const result = await getFriendChatList(me.accessToken, LIMIT, page + 1);
+    if (result.data.length === 0) {
+      setHasMore(false);
+    } else {
+      setChatList([...chatList, ...result.data]);
+      setPage(page + 1);
+    }
+  };
+
   const debouncedSearch = useCallback(
     _.debounce((query) => {
       if (query === "") return;
@@ -217,15 +227,22 @@ const Chat = () => {
 
   useEffect(() => {
     const fetchChatList = async () => {
-      const res = await getChatList(me.accessToken, currentUser.id, LIMIT, pageChat);
-      console.log("dsfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf")
+      const res = await getChatList(
+        me.accessToken,
+        currentUser?.id,
+        100,
+        pageChat
+      );
+      console.log("dsfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf");
       setMessages(res.data);
     };
-    fetchChatList();
+
     if (currentUser) {
+      fetchChatList();
       const messageListener = async (data) => {
         console.log("receive-message", currentUser, data);
-       if (currentUser.id == data?.fromUserId) setMessages((prevMessages) => [...prevMessages, data]);
+        if (currentUser.id == data?.fromUserId)
+          setMessages((prevMessages) => [...prevMessages, data]);
         const res = await getFriendChatList(me.accessToken, LIMIT, page);
         setChatList(res.data);
       };
@@ -240,7 +257,6 @@ const Chat = () => {
         }
       };
     }
-    
   }, [currentUser]);
 
   useEffect(() => {
@@ -412,9 +428,10 @@ const Chat = () => {
               </Box>
             </div>
           )}
-          <List className={classes.messageArea}>
-            <div ref={messagesEndRef}>
-              {messages &&
+          <List className={classes.messageArea} >
+            <div ref={messagesEndRef} id="scrollableDiv"
+            >
+              {/* {messages &&
                 me &&
                 messages.map((message, index) => {
                   return (
@@ -455,47 +472,59 @@ const Chat = () => {
                       </Grid>
                     </ListItem>
                   );
-                })}
-              {/* <InfiniteScroll
-                dataLength={messages.length}
-                next={() => {
-                  setPageChat(pageChat + 1);
-                }}
+                })} */}
+              <InfiniteScroll
+                dataLength={messages?.length}
+                next={fetchMoreData}
                 hasMore={hasMore}
                 loader={<h4>Loading...</h4>}
-                endMessage={
-                  <p style={{ textAlign: "center" }}>
-                    <b>Yay! You have seen it all</b>
-                  </p>
-                }
+                inverse={true}
                 scrollableTarget="scrollableDiv"
+                style={{ display: 'flex', flexDirection: 'column-reverse' }}
               >
                 {messages &&
-                  messages.map((message, index) => (
-                    <ListItem key={index}>
-                      <Grid container>
-                        <Grid item xs={12}>
-                          <ListItemText
-                            align={
-                              message.fromUserId === me.Id ? "right" : "left"
-                            }
-                            primary={message.content}
-                          ></ListItemText>
+                  me &&
+                  messages.map((message, index) => {
+                    return (
+                      <ListItem key={index}>
+                        <Grid container>
+                          <Grid item xs={12}>
+                            <ListItemText
+                              align={
+                                message.fromUserId == me.id ? "right" : "left"
+                              }
+                              primary={
+                                <div>
+                                  {message.content}
+                                  {message.imageUrl && (
+                                    <img
+                                      src={message.imageUrl}
+                                      alt="image"
+                                      style={{
+                                        width: "200px",
+                                        maxHeight: "200px",
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                              }
+                            ></ListItemText>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <ListItemText
+                              align={
+                                message.fromUserId === me.id ? "right" : "left"
+                              }
+                              secondary={date.convertDateToTime(
+                                message.createdAt
+                              )}
+                            ></ListItemText>
+                          </Grid>
                         </Grid>
-                        <Grid item xs={12}>
-                          <ListItemText
-                            align={
-                              message.fromUserId === me.Id ? "right" : "left"
-                            }
-                            secondary={date.convertDateToTime(
-                              message.createdAt
-                            )}
-                          ></ListItemText>
-                        </Grid>
-                      </Grid>
-                    </ListItem>
-                  ))}
-              </InfiniteScroll> */}
+                      </ListItem>
+                    );
+                  })}
+              </InfiniteScroll>
             </div>
           </List>
           <Divider />
