@@ -48,7 +48,7 @@ const useStyles = makeStyles({
     borderRight: "1px solid #e0e0e0",
   },
   messageArea: {
-    height: "79.1vh",
+    height: "78vh",
     overflowY: "auto",
   },
   inputArea: {
@@ -140,7 +140,13 @@ const Chat = () => {
 
   const debouncedSearch = useCallback(
     _.debounce((query) => {
-      if (query === "") return;
+      if (query === "") {
+        getFriendChatList(me.accessToken, LIMIT, page).then((result) => {
+          setChatList(result.data);
+          console.log(result);
+        });
+        return;
+      }
       getFriendIdOrName(me.accessToken, query, 1, 10).then((result) => {
         setChatList(result.data);
         console.log(result); // Handle result
@@ -152,14 +158,37 @@ const Chat = () => {
   const handleSelectChat = (chat) => {
     console.log(chat);
     if (me.id === chat.toUserId) {
-      setCurrentUser({ ...chat.fromUser, online: chat.online });
+      setCurrentUser({
+        ...chat.fromUser,
+        online: chat.online,
+        seen: chat.status === "UNREAD" ? true : false,
+      });
+      if (chat.status === "UNREAD") {
+        setChatList(
+          chatList.map((item) => {
+            if (item.id === chat.id) {
+              return {
+                ...item,
+                status: "READ",
+              };
+            }
+            return item;
+          })
+        );
+      }
     } else {
-      setCurrentUser({ ...chat.toUser, online: chat.online });
+      setCurrentUser({
+        ...chat.toUser,
+        online: chat.online,
+      });
     }
   };
 
   const handleSendChat = async () => {
     console.log("currentMessage", currentMessage);
+    if(searchTerm !== "") {
+      setSearchTerm("");
+    }
     if (currentMessage.trim() === "" && !image) return;
     const data = {
       toUserId: currentUser.id,
@@ -231,9 +260,9 @@ const Chat = () => {
         me.accessToken,
         currentUser?.id,
         100,
-        pageChat
+        pageChat,
+        currentUser?.seen
       );
-      console.log("dsfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf");
       setMessages(res.data);
     };
 
@@ -323,67 +352,103 @@ const Chat = () => {
             />
           </Grid>
           <Divider />
-          <List>
-            {chatList &&
-              chatList.map((chat) => (
-                <ListItem
-                  button
-                  key={chat.id}
-                  onClick={() => handleSelectChat(chat)}
-                >
-                  <ListItemIcon>
-                    <StyledBadge online={chat.online}>
-                      <Avatar
-                        alt={
-                          me.id === chat?.toUserId
+
+          {searchTerm === "" && (
+            <List>
+              {chatList &&
+                chatList.map((chat) => (
+                  <ListItem
+                    button
+                    key={chat.id}
+                    onClick={() => handleSelectChat(chat)}
+                  >
+                    <ListItemIcon>
+                      <StyledBadge online={chat.online}>
+                        <Avatar
+                          alt={
+                            me.id === chat?.toUserId
+                              ? chat?.fromUser?.name
+                              : chat?.toUser?.name
+                          }
+                          src={
+                            me.id === chat?.toUserId
+                              ? chat?.fromUser?.avatarUrl
+                              : chat?.toUser?.avatarUrl
+                          }
+                        />
+                      </StyledBadge>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <span style={{ fontWeight: "bold" }}>
+                          {me.id === chat?.toUserId
                             ? chat?.fromUser?.name
-                            : chat?.toUser?.name
-                        }
-                        src={
-                          me.id === chat?.toUserId
-                            ? chat?.fromUser?.avatarUrl
-                            : chat?.toUser?.avatarUrl
-                        }
-                      />
-                    </StyledBadge>
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <span style={{ fontWeight: "bold" }}>
-                        {me.id === chat?.toUserId
-                          ? chat?.fromUser?.name
-                          : chat?.toUser?.name}{" "}
-                        (
-                        {me.id === chat?.toUserId
-                          ? chat?.fromUser?.studentId
-                          : chat?.toUser?.studentId}
-                        )
-                      </span>
-                    }
-                    secondary={
-                      <span
-                        style={{
-                          color:
-                            chat?.status === "UNREAD" &&
-                            me.id === chat?.toUserId
-                              ? "black"
-                              : "grey",
-                          fontWeight:
-                            chat?.status === "UNREAD" &&
-                            me.id === chat?.toUserId
-                              ? "bold"
-                              : "normal",
-                        }}
-                      >
-                        {`${me.id != chat?.toUserId ? "Bạn :" : ""} ${
-                          chat?.content
-                        }`}
-                      </span>
-                    }
-                  />
-                </ListItem>
-              ))}
-          </List>
+                            : chat?.toUser?.name}{" "}
+                          (
+                          {me.id === chat?.toUserId
+                            ? chat?.fromUser?.studentId
+                            : chat?.toUser?.studentId}
+                          )
+                        </span>
+                      }
+                      secondary={
+                        <span
+                          style={{
+                            color:
+                              chat?.status === "UNREAD" &&
+                              me.id === chat?.toUserId
+                                ? "black"
+                                : "grey",
+                            fontWeight:
+                              chat?.status === "UNREAD" &&
+                              me.id === chat?.toUserId
+                                ? "bold"
+                                : "normal",
+                          }}
+                        >
+                          {`${me.id != chat?.toUserId ? "Bạn :" : ""} ${
+                            chat?.content
+                          }`}
+                        </span>
+                      }
+                    />
+                  </ListItem>
+                ))}
+            </List>
+          )}
+          {searchTerm !== "" && (
+            <List>
+              {chatList &&
+                chatList.map((chat) => (
+                  <ListItem
+                    button
+                    key={chat.id}
+                    onClick={() => {
+                      setCurrentUser({
+                        ...chat,
+                        online: chat.online,
+                      });
+                    }}
+                  >
+                    <ListItemIcon>
+                      <StyledBadge online={chat.online}>
+                        <Avatar
+                          alt={me.id === chat.name}
+                          src={chat.avatarUrl}
+                        />
+                      </StyledBadge>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <span style={{ fontWeight: "bold" }}>
+                          {chat.name} ({chat.studentId})
+                        </span>
+                      }
+                    />
+                  </ListItem>
+                ))}
+            </List>
+          )}
         </Grid>
         <Grid item xs={9}>
           {currentUser && (
@@ -428,10 +493,9 @@ const Chat = () => {
               </Box>
             </div>
           )}
-          <List className={classes.messageArea} >
-            <div ref={messagesEndRef} id="scrollableDiv"
-            >
-              {/* {messages &&
+          <List className={classes.messageArea}>
+            <div ref={messagesEndRef} id="scrollableDiv">
+              {messages &&
                 me &&
                 messages.map((message, index) => {
                   return (
@@ -472,15 +536,14 @@ const Chat = () => {
                       </Grid>
                     </ListItem>
                   );
-                })} */}
-              <InfiniteScroll
+                })}
+              {/* <InfiniteScroll
                 dataLength={messages?.length}
                 next={fetchMoreData}
                 hasMore={hasMore}
                 loader={<h4>Loading...</h4>}
-                inverse={true}
                 scrollableTarget="scrollableDiv"
-                style={{ display: 'flex', flexDirection: 'column-reverse' }}
+                style={{ display: "flex", flexDirection: "column-reverse" }}
               >
                 {messages &&
                   me &&
@@ -524,7 +587,7 @@ const Chat = () => {
                       </ListItem>
                     );
                   })}
-              </InfiniteScroll>
+              </InfiniteScroll> */}
             </div>
           </List>
           <Divider />

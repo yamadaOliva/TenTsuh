@@ -24,6 +24,7 @@ import { socket } from "../../socket";
 import { getFriendsRequest } from "../../service/friend.service";
 import { useSelector } from "react-redux";
 import { logoutBE } from "../../service/auth.service";
+import { getUnseenChat } from "../../service/chat.service";
 import {
   acceptFriendRequest,
   rejectFriendRequest,
@@ -85,6 +86,9 @@ export default function Header() {
   const [notificationsMenuAnchorEl, setNotificationsMenuAnchorEl] =
     React.useState(null);
   const [notifications, setNotifications] = React.useState([]);
+  const [unseenChat, setUnseenChat] = React.useState([]);
+
+
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event?.currentTarget);
   };
@@ -130,9 +134,17 @@ export default function Header() {
       setNotifications(response.data);
     }
   };
+
+  const fetchUnseenChat = async () => {
+    const response = await getUnseenChat(me.accessToken);
+    if (+response.EC === 200) {
+      setUnseenChat(response.data);
+    }
+  };
   React.useEffect(() => {
     fetchFriends();
     fetchNotifications();
+    fetchUnseenChat();
   }, []);
 
   React.useEffect(() => {
@@ -254,7 +266,7 @@ export default function Header() {
           }}
         >
           <Avatar src="/iconHust.png" />
-        </IconButton>
+        </IconButton> 
         <Typography
           variant="h6"
           noWrap
@@ -292,7 +304,7 @@ export default function Header() {
             aria-label="show 4 new mails"
             color="inherit"
           >
-            <Badge badgeContent={4} color="error">
+            <Badge badgeContent={unseenChat.length} color="error">
               <MailIcon />
             </Badge>
           </IconButton>

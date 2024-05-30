@@ -9,12 +9,16 @@ const getFriendChatList = (accessToken, limit, page) => {
   });
 };
 
-const getChatList = (accessToken, targetId, limit, page) => {
-  return axios.get(`/chat/list/${targetId}/${page}/${limit}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+const getChatList = (accessToken, targetId, limit, page, seen) => {
+  return axios.get(
+    `/chat/list/${targetId}/${page}/${limit}/${seen}
+  `,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
 };
 
 const sendChat = (accessToken, data) => {
@@ -22,4 +26,11 @@ const sendChat = (accessToken, data) => {
   return axios.post("/chat/send", data);
 };
 
-export { getFriendChatList, getChatList, sendChat };
+const getUnseenChat = (accessToken) => {
+  return axios.get("/chat/unseen", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+export { getFriendChatList, getChatList, sendChat, getUnseenChat };
