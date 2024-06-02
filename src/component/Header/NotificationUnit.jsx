@@ -11,8 +11,8 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { date } from "../../utils/index";
-
-export default function NotificationUnit({ data }) {
+import { deleteNotification } from "../../service/notification.service";
+export default function NotificationUnit({ data, handleDeleteNotification }) {
   return (
     <>
       <Card
@@ -92,6 +92,7 @@ export default function NotificationUnit({ data }) {
               top: 16,
               right: 3,
             }}
+            onClick={() => handleDeleteNotification(data.id)}
           >
             <DeleteIcon />
           </IconButton>

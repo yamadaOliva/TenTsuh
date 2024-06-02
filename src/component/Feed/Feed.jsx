@@ -8,7 +8,6 @@ const Feed = () => {
   const PER_PAGE = 5;
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
-  console.log(id);
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const userId = useSelector((state) => state.user.id);
@@ -18,20 +17,34 @@ const Feed = () => {
         if (id) {
           const res = await getPotsOfUser(id);
           console.log(res.data);
-          setPosts(res.data);
+          setPosts(res?.data);
         } else {
           const res = await getPotsOfUser(userId);
-          console.log(res.data);
           setPosts(res.data);
         }
-        console.log(res.data);
-        setPosts(res.data);
       } catch (error) {
         console.log(error);
       }
     };
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        if (id) {
+          const res = await getPotsOfUser(id);
+          setPosts(res.data);
+        } else {
+          const res = await getPotsOfUser(userId);
+          setPosts(res.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchPosts();
+  }, [id]);
   setTimeout(() => {
     setLoading(false);
   }, [3000]);

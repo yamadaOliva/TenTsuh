@@ -9,4 +9,9 @@ const readNotification = (accessToken) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
   return axios.put(`/notification/read`);
 };
-export { getNotifications, readNotification };
+
+const deleteNotification = (accessToken, id) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+  return axios.delete(`/notification/delete/${id}`);
+};
+export { getNotifications, readNotification, deleteNotification };

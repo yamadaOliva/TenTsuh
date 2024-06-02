@@ -33,4 +33,4 @@ const getUnseenChat = (accessToken) => {
     },
   });
 };
-export { getFriendChatList, getChatList, sendChat, getUnseenChat };
+export { getFriendChatList, getChatList, sendChat, getUnseenChat  };

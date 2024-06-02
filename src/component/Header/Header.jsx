@@ -32,6 +32,7 @@ import {
 import {
   getNotifications,
   readNotification,
+  deleteNotification,
 } from "../../service/notification.service";
 import FriendRequestUnit from "./FriendRequestUnit";
 import { toast } from "react-toastify";
@@ -88,6 +89,14 @@ export default function Header() {
   const [notifications, setNotifications] = React.useState([]);
   const [unseenChat, setUnseenChat] = React.useState([]);
 
+  const handleDeleteNotification = async (id) => {
+    const res = await deleteNotification(me.accessToken, id);
+    if (+res.EC === 200) {
+      toast.success("Đã xóa thông báo");
+      const newNotifications = notifications.filter((item) => item.id !== id);
+      setNotifications(newNotifications);
+    }
+  };
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event?.currentTarget);
@@ -187,8 +196,9 @@ export default function Header() {
     if (+res.EC === 200) {
       toast.success("Đã chấp nhận lời mời kết bạn");
       await socket.emit("addFriend", { friendId: friendId, type: "accept" });
-      await socket.emit("addFriend", { friendId: data.id, type: "accept" });
+      await socket.emit("addFriend", { friendId: me.id, type: "accept" });
       const newFriends = friends.filter((item) => item.id !== id);
+      console.log(newFriends);
       setFriends(newFriends);
     }
   };
@@ -197,7 +207,7 @@ export default function Header() {
     const res = await rejectFriendRequest(me.accessToken, id);
     if (+res.EC === 200) {
       toast.success("Đã từ chối lời mời kết bạn");
-      await socket.emit("addFriend", { friendId: data.id, type: "reject" });
+      await socket.emit("addFriend", { friendId: me.id, type: "reject" });
       const newFriends = friends.filter((item) => item.id !== id);
       setFriends(newFriends);
     }
@@ -266,7 +276,7 @@ export default function Header() {
           }}
         >
           <Avatar src="/iconHust.png" />
-        </IconButton> 
+        </IconButton>
         <Typography
           variant="h6"
           noWrap
@@ -393,7 +403,9 @@ export default function Header() {
         {notifications.length > 0 ? (
           notifications.map((notification) => (
             <Box key={notification.id}>
-              <NotificationUnit data={notification} />
+              <NotificationUnit data={notification} 
+                handleDeleteNotification={handleDeleteNotification}
+              />
             </Box>
           ))
         ) : (

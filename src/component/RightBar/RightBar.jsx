@@ -14,10 +14,12 @@ import { green } from "@mui/material/colors";
 import { getListOnlineFriend } from "../../service/friend.service";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
+import { openChat } from "../../redux/Slice/chat-slice";
+import { useDispatch } from "react-redux";
 const Rightbar = () => {
   const accessToken = useSelector((state) => state.user.accessToken);
   const [friends, setFriends] = useState([]);
-
+  const dispatch = useDispatch();
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -80,13 +82,23 @@ const Rightbar = () => {
 
         <List>
           {friends.map((friend, index) => (
-            <ListItem key={index} sx={{ mb: 1 }}>
+            <ListItem
+              key={index}
+              sx={{ mb: 1 }}
+              onClick={() => {
+                dispatch(openChat(friend));
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <ListItemAvatar>
                 <StyledBadge>
                   <Avatar alt={friend.name} src={friend.avatarUrl} />
                 </StyledBadge>
               </ListItemAvatar>
-              <ListItemText primary={friend.name} />
+              <ListItemText
+                primary={friend.name + `(${friend.studentId})`}
+                secondary={friend.class}
+              />
             </ListItem>
           ))}
         </List>

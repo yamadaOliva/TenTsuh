@@ -98,6 +98,46 @@ const getFriendIdOrName = (accessToken, keyword,page,limit) => {
     },
   });
 };
+
+// @Post('/follow') @Delete('/unfollow/:idTarget')  @Get('check/:idTarget') @Delete('/delete/:idTarget')
+
+const followFriend = (accessToken, idTarget) => {
+  return axios.post(
+    "/friend/follow",
+    {
+      idTarget,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+}
+
+const unfollowFriend = (accessToken, idTarget) => {
+  return axios.delete(`/friend/unfollow/${idTarget}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
+const checkFollow = (accessToken, idTarget) => {
+  return axios.get(`/friend/check/${idTarget}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
+const unFriend = (accessToken, idTarget) => {
+  return axios.delete(`/friend/delete/${idTarget}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
 export {
   getFriendsRequest,
   getCountryman,
@@ -109,4 +149,8 @@ export {
   getFriendList,
   getListOnlineFriend,
   getFriendIdOrName,
+  followFriend,
+  unfollowFriend,
+  checkFollow,
+  unFriend
 };

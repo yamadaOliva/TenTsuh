@@ -8,15 +8,17 @@ import Header from "./component/Header/Header";
 import { Outlet } from "react-router-dom";
 import { refreshToken } from "./service/auth.service";
 import { getMe } from "./service/user.service";
+import MiniChat from "./component/BoxChat/BoxChat";
 import {
   setAccessToken,
   setRefreshToken,
   setInfo,
 } from "./redux/Slice/user-slice";
-
+import { openChat } from "./redux/Slice/chat-slice";
 function App() {
   const [data, setData] = useState({});
   const accessToken = useSelector((state) => state.user.accessToken);
+  const chat = useSelector((state) => state.chat);
   const refresh_token = useSelector((state) => state.user.refreshToken);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -55,8 +57,10 @@ function App() {
   return (
     <>
       {" "}
+     
       <section className="body__container">
         <Outlet />
+        {chat.isChatOpen && <MiniChat friend={chat.friend} />}
       </section>
     </>
   );

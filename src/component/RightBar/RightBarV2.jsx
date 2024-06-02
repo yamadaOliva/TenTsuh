@@ -3,6 +3,7 @@ import { getProfileById } from "../../service/user.service";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { date } from "../../utils/index";
+import { toast } from "react-toastify";
 import {
   Avatar,
   Box,
@@ -14,11 +15,19 @@ import {
   CardMedia,
   Button,
 } from "@mui/material";
-
+import {
+  checkFollow,
+  followFriend,
+  unfollowFriend,
+  unFriend,
+  addFriendRequest,
+} from "../../service/friend.service";
+import { socket } from "../../socket";
 const RightbarV2 = () => {
   const accessToken = useSelector((state) => state.user.accessToken);
+  const me = useSelector((state) => state.user);
+  const [status, setStatus] = useState({});
   const { id } = useParams();
-
   const [user, setUser] = useState({});
   const friendsList = [
     {
@@ -49,7 +58,11 @@ const RightbarV2 = () => {
       try {
         const res = await getProfileById(accessToken, id);
         setUser(res.data);
-        console.log(res.data);
+        const resStatus = await checkFollow(accessToken, id);
+        console.log(resStatus.data);
+        setStatus(resStatus.data);
+
+        console.log(resStatus.data);
       } catch (error) {
         console.log(error);
       }
@@ -57,28 +70,82 @@ const RightbarV2 = () => {
     fetchProfile();
   }, []);
 
-  const handleAddFriend = () => {
+  const handleAddFriend = async () => {
     console.log("Add Friend button clicked");
-    // Logic kết bạn
+    const res = await addFriendRequest(accessToken, id);
+    setStatus(res.data);
+    console.log(res);
+    if (res.EC === 200) {
+      toast.success("Đã gửi lời mời kết bạn");
+      socket.emit("addFriend", { friendId: id });
+      setStatus({ ...status, friend: { status: "PENDING" } });
+      socket.off("addFriend");
+    }
   };
 
-  const handleFollow = () => {
-    console.log("Follow button clicked");
-    // Logic follow
+  const handleFollow = async () => {
+    const res = await followFriend(accessToken, id);
+    setStatus(res.data);
+    if (res.EC === 200) {
+      toast.success("Đã theo dõi");
+      setStatus({ ...status, follow: true });
+    }
   };
+
+  const handleUnfollow = async () => {
+    console.log("Unfollow button clicked");
+    const res = await unfollowFriend(accessToken, id);
+    setStatus(res.data);
+    console.log(res);
+    if (res.EC === 200) {
+      toast.success("Đã bỏ theo dõi");
+      setStatus({ ...status, follow: false });
+    }
+  };
+
+  const handleUnfriend = async () => {
+    console.log("Unfriend button clicked");
+    const res = await unFriend(accessToken, id);
+    setStatus(res.data);
+    console.log(res);
+    if (res.EC === 200) {
+      toast.success("Đã hủy kết bạn");
+      setStatus({ ...status, friend: false });
+      socket.emit("addFriend", { friendId: id });
+      socket.off("addFriend");
+    }
+  };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await getProfileById(accessToken, id);
+        setUser(res.data);
+        const resStatus = await checkFollow(accessToken, id);
+        console.log(resStatus.data);
+        setStatus(resStatus.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchProfile();
+  }, [id]);
 
   return (
     <Box
-      sx={{ display: { xs: "none", sm: "block" }, width: 450, marginRight: 2 }}
+      sx={{
+        display: { xs: "none", sm: "block" },
+        width: {
+          xl: id != me?.id ? 500 : 400,
+          sm: 300,
+        },
+        marginRight: 2,
+      }}
     >
-      <Box
-        position="fixed"
-        width={450}
-        sx={{ maxHeight: "100vh", overflowY: "auto" }}
-      >
+      <Box position="fixed" sx={{ maxHeight: "100vh", overflowY: "auto" }}>
         <Grid container spacing={2}>
           {/* avatar */}
-          <Grid item xs={6}>
+          <Grid item xs={id != me?.id ? 4 : 12}>
             <Box
               sx={{
                 display: "flex",
@@ -98,27 +165,68 @@ const RightbarV2 = () => {
             </Box>
           </Grid>
           {/* add friend and follow buttons */}
-          <Grid item xs={6}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100%",
-              }}
-            >
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleAddFriend}
-                style={{ marginRight: "10px" }}
+          <Grid item xs={8}>
+            {me.id !== user.id && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100%",
+                }}
               >
-                Kết bạn
-              </Button>
-              <Button variant="outlined" color="primary" onClick={handleFollow}>
-                Theo dõi
-              </Button>
-            </Box>
+                {!status?.friend && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddFriend}
+                    style={{ marginRight: "10px" }}
+                  >
+                    Kết bạn
+                  </Button>
+                )}
+
+                {status?.friend?.status === "PENDING" && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleUnfriend}
+                    style={{ marginRight: "10px" }}
+                  >
+                    Hủy lời mời
+                  </Button>
+                )}
+
+                {status?.friend?.status === "ACCEPTED" && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleUnfriend}
+                    style={{ marginRight: "10px" }}
+                  >
+                    Hủy kết bạn
+                  </Button>
+                )}
+
+                {!status?.follow ? (
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleFollow}
+                  >
+                    Theo dõi
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleUnfollow}
+                  >
+                    Bỏ theo dõi
+                  </Button>
+                )}
+              </Box>
+            )}
           </Grid>
         </Grid>
         <Typography

@@ -102,22 +102,7 @@ const Chat = () => {
   const [pageChat, setPageChat] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [image, setImage] = useState("");
-  const handleSendMessage = () => {
-    console.log(currentMessage);
-    if (currentMessage.trim() !== "") {
-      setMessages([
-        ...messages,
-        {
-          content: currentMessage,
-          fromUserId: me.Id,
-          createdAt: new Date().toISOString(),
-          imgUrl: image,
-        },
-      ]);
-      setImage("");
-      setCurrentMessage("");
-    }
-  };
+ 
   const handleInputChange = (e) => {
     setCurrentMessage(e.target.value);
   };
