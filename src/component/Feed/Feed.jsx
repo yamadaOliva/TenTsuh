@@ -16,10 +16,11 @@ const Feed = () => {
       try {
         if (id) {
           const res = await getPotsOfUser(id);
-          console.log(res.data);
+          console.log("dfgdfgdfgdfg",res.data);
           setPosts(res?.data);
         } else {
           const res = await getPotsOfUser(userId);
+          console.log("dfgdfgdfgdfg",res.data);
           setPosts(res.data);
         }
       } catch (error) {

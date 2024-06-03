@@ -183,19 +183,19 @@ const Add = () => {
             sx={{
               height: "200px",
               borderRadius: 5,
-              overflow: "hidden", // Đảm bảo ảnh không vượt ra khung
-              display: "flex", // Để canh chỉnh ảnh
-              justifyContent: "center", // Để canh chỉnh ảnh
-              alignItems: "center", // Để canh chỉnh ảnh
+              overflow: "hidden",
+              display: "flex", 
+              justifyContent: "center", 
+              alignItems: "center", 
             }}
           >
             <img
               src={image}
               alt="preview"
               style={{
-                objectFit: "contain", // Hiển thị ảnh một cách chính xác mà không làm biến dạng tỉ lệ
-                width: "100%", // Chiều rộng ảnh sẽ fit với kích thước của Box
-                height: "100%", // Chiều cao ảnh sẽ fit với kích thước của Box
+                objectFit: "contain", 
+                width: "100%", 
+                height: "100%", 
               }}
             />
           </Box>

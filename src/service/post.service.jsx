@@ -8,4 +8,13 @@ const getPotsOfUser = (id) => {
   return axios.get(`/post/get/${id}`);
 };
 
-export { createPost, getPotsOfUser };
+const likePost = (postId, access_token) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.post(`/post/like/`, { postId });
+};
+
+const unlikePost = (postId, access_token) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.delete(`/post/unlike/${postId}`);
+};
+export { createPost, getPotsOfUser, likePost, unlikePost };

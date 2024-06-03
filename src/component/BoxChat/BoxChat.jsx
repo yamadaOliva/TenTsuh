@@ -43,6 +43,7 @@ const MiniChat = ({ friend }) => {
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [image, setImage] = useState("");
   const dispatch = useDispatch();
   const cloudinaryRef = useRef();
   const widgetRef = useRef();
@@ -60,12 +61,15 @@ const MiniChat = ({ friend }) => {
       toUserId: friend.id,
       content: currentMessage,
       fromUserId: me.id,
+      imageUrl: image,
     };
     const result = await sendChat(me.accessToken, data);
+    console.log(result);
     if (result?.EC === 200) {
       setMessages([...messages, result.data]);
       socket.emit("message", result.data);
       setCurrentMessage("");
+      setImage("");
     }
   };
 
@@ -136,9 +140,6 @@ const MiniChat = ({ friend }) => {
           console.log(result.info.secure_url);
           if (result.info?.secure_url?.startsWith("http")) {
             setImage(result.info.secure_url);
-            if (props.setSomethingChange) {
-              props.setSomethingChange(true);
-            }
           }
         }
       }
@@ -185,13 +186,51 @@ const MiniChat = ({ friend }) => {
 
         <Divider />
         <div className={classes.messageArea} id="scrollableDiv">
+          {image && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                position: "absolute",
+                top: "54%",
+                border: "1px solid #000000",
+                zIndex: 100,
+                left: "3%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <img
+                src={image}
+                alt="image"
+                style={{
+                  width: "100px",
+                  maxHeight: "100px",
+                }}
+              />
+            </div>
+          )}
           {messages.map((message, index) => (
             <ListItem key={index}>
               <Grid container>
                 <Grid item xs={12}>
                   <ListItemText
                     align={message.fromUserId === me.id ? "right" : "left"}
-                    primary={message.content}
+                    primary={
+                      <div>
+                        {message.content}
+                        {message.imageUrl && (
+                          <img
+                            src={message.imageUrl}
+                            alt="image"
+                            style={{
+                              width: "100px",
+                              maxHeight: "100px",
+                            }}
+                          />
+                        )}
+                      </div>
+                    }
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -235,7 +274,7 @@ const MiniChat = ({ friend }) => {
             )}
           </IconButton>
           <TextField
-            label="Type a message..."
+            label="Nhập tin nhắn"
             fullWidth
             variant="outlined"
             value={currentMessage}
