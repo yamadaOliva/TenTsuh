@@ -27,7 +27,7 @@ import {
 import { useSelector } from "react-redux";
 import { likePost, unlikePost } from "../../service/post.service";
 import { date } from "../../utils/index";
-
+import { getPostById, commentPost } from "../../service/post.service";
 const CommentItem = ({ comment, addReply, handleLike }) => {
   const [replyText, setReplyText] = useState("");
   const [showReply, setShowReply] = useState(false);
@@ -109,15 +109,16 @@ const CommentItem = ({ comment, addReply, handleLike }) => {
   );
 };
 
-const Comments = ({ comments, addReply, handleLike }) => {
+const Comments = ({ comments, addReply, handleLike, accessToken, postId }) => {
   const [newComment, setNewComment] = useState("");
 
   const handleCommentChange = (event) => {
     setNewComment(event.target.value);
   };
 
-  const submitComment = () => {
+  const submitComment = async () => {
     if (!newComment.trim()) return;
+    const res = await commentPost(accessToken, postId, newComment);
     addReply(null, newComment);
     setNewComment("");
   };
@@ -171,9 +172,11 @@ const Comments = ({ comments, addReply, handleLike }) => {
 
 const Post = ({ post }) => {
   const me = useSelector((state) => state.user);
+  const [currentPost, setCurrentPost] = useState(post);
   const [isLiked, setIsLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [change, setChange] = useState(0);
+  const [isModalLikeOpen, setIsModalLikeOpen] = useState(false);
   const [comments, setComments] = useState([
     {
       id: 1,
@@ -258,13 +261,17 @@ const Post = ({ post }) => {
   const handleLikePost = async () => {
     console.log(post.id);
     if (isLiked) {
-      await unlikePost(post.id, me.accessToken);
+      await unlikePost(currentPost.id, me.accessToken);
+      const res = await getPostById(me.accessToken, currentPost.id);
+      setCurrentPost(res.data);
       setIsLiked(false);
-      setChange(change - 1);
+      // setChange(change - 1);
     } else {
-      await likePost(post.id, me.accessToken);
+      await likePost(currentPost.id, me.accessToken);
+      const res = await getPostById(me.accessToken, currentPost.id);
+      setCurrentPost(res.data);
       setIsLiked(true);
-      setChange(change + 1);
+      // setChange(change + 1);
     }
   };
 
@@ -275,6 +282,61 @@ const Post = ({ post }) => {
       }
     });
   }, []);
+
+  const LikePostModal = ({ likes }) => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          position: "absolute",
+          top: "75%",
+          left: "19%",
+          transform: "translate(-50%, -50%)",
+          backgroundColor: "#fff",
+          padding: "1rem",
+          borderRadius: "10px",
+          boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
+          border: "2px solid #000",
+          maxHeight: "30vh",
+          backgroundColor: "#fff",
+        }}
+      >
+        <Typography
+          variant="h5"
+          style={{
+            fontWeight: "bold",
+            fontSize: "1.5rem",
+            color: "#000000",
+          }}
+        >
+          {likes.length} lượt thích
+        </Typography>
+        <List>
+          {likes.map((like) => (
+            <ListItem key={like.user.id}>
+              <ListItemAvatar>
+                <Avatar src={like.user.avatarUrl} />
+              </ListItemAvatar>
+              <ListItemText primary={like.user.name} />
+            </ListItem>
+          ))}
+        </List>
+        <Button
+          onClick={() => setIsModalLikeOpen(false)}
+          style={{
+            marginTop: "1rem",
+            borderRadius: "10px",
+            backgroundColor: "#3f51b5",
+            color: "#fff",
+          }}
+        >
+          Close
+        </Button>
+      </div>
+    );
+  };
   return (
     <Card
       style={{
@@ -286,13 +348,14 @@ const Post = ({ post }) => {
         marginBottom: "20px",
         marginTop: "10px",
         height: "fit-content",
+        position: "relative",
       }}
     >
       <CardHeader
         avatar={
           <Avatar
             aria-label="recipe"
-            src={post.user.avatarUrl}
+            src={currentPost.user.avatarUrl}
             style={{
               borderColor: "primary.main",
               border: "1px solid",
@@ -305,13 +368,13 @@ const Post = ({ post }) => {
           </IconButton>
         }
         title={post.user.name}
-        subheader={date.convertDateToTime(post.createdAt)}
+        subheader={date.convertDateToTime(currentPost.createdAt)}
         style={{
           borderBottom: "1px solid #C0C0C0",
         }}
       />
 
-      {post.imageUrl && (
+      {currentPost.imageUrl && (
         <div
           style={{
             display: "flex",
@@ -322,7 +385,7 @@ const Post = ({ post }) => {
         >
           <CardMedia
             component="img"
-            image={post.imageUrl}
+            image={currentPost.imageUrl}
             alt="Post image"
             style={{
               objectFit: "cover",
@@ -348,7 +411,7 @@ const Post = ({ post }) => {
             fontWeight: "bold",
           }}
         >
-          {post.title}
+          {currentPost.title}
         </Typography>
         <Typography
           variant="body2"
@@ -358,7 +421,7 @@ const Post = ({ post }) => {
             fontWeight: "400",
           }}
         >
-          {post.content}
+          {currentPost.content}
         </Typography>
       </CardContent>
       <CardActions
@@ -384,7 +447,7 @@ const Post = ({ post }) => {
           <Comment />
         </IconButton>
       </CardActions>
-      {post.likes.length + change > 0 && (
+      {currentPost.likes.length + change > 0 && (
         <Typography
           variant="body2"
           color="text.secondary"
@@ -393,9 +456,11 @@ const Post = ({ post }) => {
             fontSize: "1rem",
             fontWeight: "600",
             color: "#000000",
+            cursor: "pointer",
           }}
+          onClick={() => setIsModalLikeOpen(true)}
         >
-          {post.likes.length + change} thích
+          {currentPost.likes.length + change} thích
         </Typography>
       )}
       {showComments && (
@@ -403,8 +468,11 @@ const Post = ({ post }) => {
           comments={comments}
           addReply={addReply}
           handleLike={handleLike}
+          accessToken={me.accessToken}
+          postId={currentPost.id}
         />
       )}
+      {isModalLikeOpen && <LikePostModal likes={currentPost.likes} />}
     </Card>
   );
 };
