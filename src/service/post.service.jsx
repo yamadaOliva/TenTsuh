@@ -27,6 +27,22 @@ const commentPost = (access_token, postId, content) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
   return axios.post(`/post/comment`, { postId, content });
 };
+
+const replyComment = (access_token, commentId, content) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.post(`/post/comment/reply`, { commentId, content });
+};
+
+const likeComment = (access_token, commentId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.post(`/post/comment/like`, { commentId });
+};
+
+const unlikeComment = (access_token, commentId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.delete(`/post/comment/unlike/${commentId}`);
+};
+
 export {
   createPost,
   getPotsOfUser,
@@ -34,4 +50,7 @@ export {
   unlikePost,
   getPostById,
   commentPost,
+  replyComment,
+  likeComment,
+  unlikeComment,
 };
