@@ -16,6 +16,7 @@ import Profile from "./page/profile/profile.jsx";
 import ProfileApp from "./page/profilePage/profilepage.jsx";
 import Friend from "./page/friend/fiend.jsx";
 import Group from "./page/group/group.jsx";
+import NotFound from "./page/404/notFound.jsx";
 //Azure
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
 import { msalConfig } from "./setup/auth-config.jsx";
@@ -44,6 +45,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <PersistGate loading={null} persistor={persistor}>
       <BrowserRouter>
         <Routes>
+          <Route path="*" element={<NotFound />} />
           <Route path="/" element={<App />}>
             <Route path="home" element={<Home />} />
             <Route path="profile" element={<Profile />} />

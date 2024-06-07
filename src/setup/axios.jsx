@@ -14,13 +14,12 @@ instance.interceptors.response.use(
       case 401:
         break;
       case 403:
-        toast.error("Forbidden");
         break;
       case 404:
-        toast.error("Not Found");
+        toast.error("Không tìm thấy trang");
         break;
       case 500:
-        toast.error("Internal Server Error");
+        toast.error("Mất kết nối đến server");
         break;
       default:
     }

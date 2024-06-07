@@ -236,7 +236,7 @@ export default function Register() {
       const res = await register(data);
       console.log(res);
       if (+res?.EC === 200) {
-        toast.success("Đăng ký thành công");
+        toast.success("Đăng ký thành công, hãy đăng nhập outlook để xác nhận danh tính hoặc ấn đăng nhập với Office 365");
         navigate("/login");
       }
     } catch (error) {
