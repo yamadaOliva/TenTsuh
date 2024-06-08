@@ -120,6 +120,7 @@ export default function Login({ instance }) {
       localStorage.setItem("email", "");
       localStorage.setItem("password", "");
     }
+    console.log(email, password);
     const res = await login(email, password);
 
     console.log(res);
@@ -130,9 +131,7 @@ export default function Login({ instance }) {
       navigate("/home");
       toast.success("Đăng nhập thành công");
     } else {
-      toast.error("Đăng nhập thất bại");
-      setPassword("");
-      setEmail("");
+      toast.error(res?.message);
     }
   };
   //useEffect

@@ -88,7 +88,6 @@ export default function Header() {
     React.useState(null);
   const [notifications, setNotifications] = React.useState([]);
   const [unseenChat, setUnseenChat] = React.useState([]);
-
   const handleDeleteNotification = async (id) => {
     const res = await deleteNotification(me.accessToken, id);
     if (+res.EC === 200) {
@@ -165,6 +164,10 @@ export default function Header() {
           await fetchNotifications();
         }
         await fetchFriends();
+      });
+      socket.on("notification", async (data) => {
+        console.log("notification", data);
+        await fetchNotifications();
       });
     }
   }, []);
@@ -313,6 +316,10 @@ export default function Header() {
             size="large"
             aria-label="show 4 new mails"
             color="inherit"
+            onClick={() => {
+              navigate("/message");
+            }
+            }
           >
             <Badge badgeContent={unseenChat.length} color="error">
               <MailIcon />
@@ -403,7 +410,8 @@ export default function Header() {
         {notifications.length > 0 ? (
           notifications.map((notification) => (
             <Box key={notification.id}>
-              <NotificationUnit data={notification} 
+              <NotificationUnit
+                data={notification}
                 handleDeleteNotification={handleDeleteNotification}
               />
             </Box>

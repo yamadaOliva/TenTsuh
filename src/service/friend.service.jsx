@@ -138,6 +138,11 @@ const unFriend = (accessToken, idTarget) => {
     },
   });
 }
+
+const getFriendOfId = (id) => {
+  return axios.get(`/friend/list/${id}`);
+}
+
 export {
   getFriendsRequest,
   getCountryman,
@@ -152,5 +157,6 @@ export {
   followFriend,
   unfollowFriend,
   checkFollow,
-  unFriend
+  unFriend,
+  getFriendOfId
 };

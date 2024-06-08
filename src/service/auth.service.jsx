@@ -1,3 +1,4 @@
+import { Token } from "@mui/icons-material";
 import axios from "../setup/axios";
 const login = (email, password) => {
   console.log(email, password);
@@ -22,4 +23,8 @@ const logoutBE = (accessToken) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
   return axios.put("/auth/logout");
 };
-export { login, register, refreshToken, login365, logoutBE };
+
+const activeAccount = (token) => {
+  return axios.get(`/auth/active/${token}`);
+};
+export { login, register, refreshToken, login365, logoutBE, activeAccount };

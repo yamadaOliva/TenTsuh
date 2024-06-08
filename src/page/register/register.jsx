@@ -106,7 +106,7 @@ export default function Register() {
         console.log("dsfsdfsdfsf", ptr);
         setProvince(ptr);
         setCurrentProvince(ptr[0]);
-        let ptr1 = address.getDistricts(ptr[0]);
+        let ptr1 = address.getDistricts(dataJson, ptr[0]);
         setDistrict(ptr1);
         setCurrentDistrict(ptr1[0]);
       } catch (error) {
@@ -204,6 +204,12 @@ export default function Register() {
       toast.error("Mã sinh viên không hợp lệ");
       return false;
     }
+    // birthday
+    if (!birthday) {
+      toast.error("Ngày sinh không được để trống");
+      return false;
+    }
+    
     let studentId1 = email.split("@")[0].split(".")[1].slice(2);
     if (studentId.slice(2) !== studentId1) {
       toast.error("Mã sinh viên không khớp với email");
@@ -238,6 +244,8 @@ export default function Register() {
       if (+res?.EC === 200) {
         toast.success("Đăng ký thành công, hãy đăng nhập outlook để xác nhận danh tính hoặc ấn đăng nhập với Office 365");
         navigate("/login");
+      }else{
+        toast.error(res?.message);
       }
     } catch (error) {
       console.log(error);
@@ -301,6 +309,7 @@ export default function Register() {
                         value={currentProvince}
                         onChange={(e) => {
                           setCurrentProvince(e.target.value);
+                        
                         }}
                       >
                         {province.map((option, index) => (

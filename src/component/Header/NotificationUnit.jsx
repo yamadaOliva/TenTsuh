@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { date } from "../../utils/index";
-import { deleteNotification } from "../../service/notification.service";
 export default function NotificationUnit({ data, handleDeleteNotification }) {
   return (
     <>

@@ -71,13 +71,7 @@ const Rightbar = () => {
           >
             Bạn bè đang trực tuyến
           </Typography>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Tìm kiếm bạn bè"
-            style={{ marginLeft: "5px" }}
-            sx={{ mb: 1 }}
-          />
+          
         </Box>
 
         <List>

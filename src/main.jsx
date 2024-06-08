@@ -17,6 +17,7 @@ import ProfileApp from "./page/profilePage/profilepage.jsx";
 import Friend from "./page/friend/fiend.jsx";
 import Group from "./page/group/group.jsx";
 import NotFound from "./page/404/notFound.jsx";
+import ActivePage from "./page/active/active.jsx";
 //Azure
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
 import { msalConfig } from "./setup/auth-config.jsx";
@@ -56,10 +57,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           </Route>
           <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />
+          <Route path="auth/active/:token" element={<ActivePage />} />
         </Routes>
         <ToastContainer
           position="top-right"
-          autoClose={5000}
+          autoClose={3000}
           hideProgressBar={false}
           newestOnTop={false}
           closeOnClick

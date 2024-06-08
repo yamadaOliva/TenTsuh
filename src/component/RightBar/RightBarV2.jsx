@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getProfileById } from "../../service/user.service";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -23,46 +24,48 @@ import {
   addFriendRequest,
 } from "../../service/friend.service";
 import { socket } from "../../socket";
+import { getFriendOfId } from "../../service/friend.service";
+import { useDispatch } from "react-redux";
+import { openChat } from "../../redux/Slice/chat-slice";
 const RightbarV2 = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const accessToken = useSelector((state) => state.user.accessToken);
   const me = useSelector((state) => state.user);
   const [status, setStatus] = useState({});
+  const [friends, setFriends] = useState([]);
   const { id } = useParams();
   const [user, setUser] = useState({});
-  const friendsList = [
-    {
-      name: "Travis Howard",
-      avatar: "https://material-ui.com/static/images/avatar/2.jpg",
-    },
-    {
-      name: "Cindy Baker",
-      avatar: "https://material-ui.com/static/images/avatar/3.jpg",
-    },
-    { name: "Agnes Walker", avatar: "" },
-    {
-      name: "Trevor Henderson",
-      avatar: "https://material-ui.com/static/images/avatar/6.jpg",
-    },
-    {
-      name: "Steve Rogers",
-      avatar: "https://material-ui.com/static/images/avatar/7.jpg",
-    },
-    {
-      name: "Natasha Romanoff",
-      avatar: "https://material-ui.com/static/images/avatar/8.jpg",
-    },
-  ];
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await getProfileById(accessToken, id);
+        console.log(res.data);
         setUser(res.data);
         const resStatus = await checkFollow(accessToken, id);
+        const resFriends = await getFriendOfId(id);
+        setFriends(resFriends.data);
         console.log(resStatus.data);
         setStatus(resStatus.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchProfile();
+  }, [id]);
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await getProfileById(accessToken, id);
+        console.log(res.data);
+        setUser(res.data);
+        const resStatus = await checkFollow(accessToken, id);
+        const resFriends = await getFriendOfId(id);
+        setFriends(resFriends.data);
         console.log(resStatus.data);
+        setStatus(resStatus.data);
       } catch (error) {
         console.log(error);
       }
@@ -136,13 +139,18 @@ const RightbarV2 = () => {
       sx={{
         display: { xs: "none", sm: "block" },
         width: {
-          xl: id != me?.id ? 500 : 400,
+          xl: id != me?.id ? 500 : 500,
           sm: 300,
         },
         marginRight: 2,
       }}
     >
-      <Box position="fixed" sx={{ maxHeight: "100vh", overflowY: "auto" }}>
+      <Box position="fixed" sx={{ maxHeight: "100vh", 
+        width: {
+          xl: 500,
+          sm: 300,
+        },
+       }}>
         <Grid container spacing={2}>
           {/* avatar */}
           <Grid item xs={id != me?.id ? 4 : 12}>
@@ -165,13 +173,14 @@ const RightbarV2 = () => {
             </Box>
           </Grid>
           {/* add friend and follow buttons */}
-          <Grid item xs={8}>
+          <Grid item xs={6}>
             {me.id !== user.id && (
               <Box
                 sx={{
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  flexDirection: "column",
                   height: "100%",
                 }}
               >
@@ -180,7 +189,6 @@ const RightbarV2 = () => {
                     variant="contained"
                     color="primary"
                     onClick={handleAddFriend}
-                    style={{ marginRight: "10px" }}
                   >
                     Kết bạn
                   </Button>
@@ -191,7 +199,6 @@ const RightbarV2 = () => {
                     variant="contained"
                     color="primary"
                     onClick={handleUnfriend}
-                    style={{ marginRight: "10px" }}
                   >
                     Hủy lời mời
                   </Button>
@@ -202,7 +209,6 @@ const RightbarV2 = () => {
                     variant="contained"
                     color="primary"
                     onClick={handleUnfriend}
-                    style={{ marginRight: "10px" }}
                   >
                     Hủy kết bạn
                   </Button>
@@ -213,6 +219,7 @@ const RightbarV2 = () => {
                     variant="outlined"
                     color="primary"
                     onClick={handleFollow}
+                    style={{ marginTop: "10px" }}
                   >
                     Theo dõi
                   </Button>
@@ -221,10 +228,24 @@ const RightbarV2 = () => {
                     variant="outlined"
                     color="primary"
                     onClick={handleUnfollow}
+                    style={{ marginTop: "10px" }}
                   >
                     Bỏ theo dõi
                   </Button>
                 )}
+
+                {/* message*/}
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => {
+                    dispatch(openChat(user));
+                  }}
+                  style={{ marginTop: "10px" }}
+                >
+                  Nhắn tin
+                </Button>
+              
               </Box>
             )}
           </Grid>
@@ -285,18 +306,33 @@ const RightbarV2 = () => {
           Bạn bè
         </Typography>
         <Grid container spacing={2}>
-          {friendsList.slice(0, 6).map((friend, index) => (
+          {friends.slice(0, 6).map((friend, index) => (
             <Grid item xs={4} key={index}>
-              <Card sx={{ maxWidth: 400 }}>
+              <Card
+                sx={{
+                  maxWidth: 400,
+                  width: 150,
+                }}
+              >
                 <CardMedia
-                  height="200"
-                  image={friend.avatar || "https://via.placeholder.com/150"}
+                  component="img"
+                  image={friend.avatarUrl || "https://via.placeholder.com/150"}
                   alt={friend.name}
-                  sx={{ width: "100%", height: 100, bgcolor: "grey.300" }}
+                  sx={{
+                    width: "100%",
+                    height: 150,
+                    cursor: "pointer",
+                  }}  
+                  onClick={() => {
+                    navigate(`/profilepage/${friend.id}`);
+                  }}
                 />
                 <CardContent>
                   <Typography gutterBottom variant="body2" noWrap>
                     {friend.name}
+                  </Typography>
+                  <Typography gutterBottom variant="subtitle2" noWrap>
+                    {friend.studentId}
                   </Typography>
                 </CardContent>
               </Card>

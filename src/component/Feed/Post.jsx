@@ -24,6 +24,7 @@ import {
   ListItemAvatar,
   Button,
   Collapse,
+  Badge,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { date } from "../../utils/index";
@@ -36,7 +37,7 @@ import {
   likePost,
   unlikePost,
 } from "../../service/post.service";
-
+import { socket } from "../../socket";
 const Post = ({ post }) => {
   const navigate = useNavigate();
   const me = useSelector((state) => state.user);
@@ -45,7 +46,7 @@ const Post = ({ post }) => {
   const [showComments, setShowComments] = useState(false);
   const [change, setChange] = useState(0);
   const [isModalLikeOpen, setIsModalLikeOpen] = useState(false);
-  const [currentLikes, setCurrentLikes] = useState();
+  const [currentLikes, setCurrentLikes] = useState(currentPost.likes);
   const [comments, setComments] = useState(
     post?.comments || [
       {
@@ -87,9 +88,13 @@ const Post = ({ post }) => {
     if (check) {
       await unlikeComment(me.accessToken, commentId);
       await reLoadPost();
+      socket.emit("comment", `post_${currentPost.id}`);
+      socket.emit("notification", `user_${comment.user.id}`)
     } else {
       await likeComment(me.accessToken, commentId);
       await reLoadPost();
+      socket.emit("comment", `post_${currentPost.id}`);
+      socket.emit("notification", `user_${comment.user.id}`)
     }
   };
 
@@ -110,13 +115,15 @@ const Post = ({ post }) => {
     const submitReply = async () => {
       await replyComment(me.accessToken, comment.id, replyText);
       await reLoadPost();
+      socket.emit("comment", `post_${currentPost.id}`);
+      socket.emit("notification", `user_${comment.user.id}`)
       setReplyText("");
       setShowReply(false);
     };
 
     return (
       <>
-        <ListItem
+        <ListItem 
           alignItems="flex-start"
           style={{
             display: "flex",
@@ -249,6 +256,8 @@ const Post = ({ post }) => {
       if (!newComment.trim()) return;
       const res = await commentPost(accessToken, postId, newComment);
       await reLoadPost();
+      socket.emit("comment", `post_${currentPost.id}`);
+      socket.emit("notification", `user_${currentPost.user.id}`)
       setNewComment("");
     };
 
@@ -376,23 +385,30 @@ const Post = ({ post }) => {
       const res = await getPostById(me.accessToken, currentPost.id);
       setCurrentPost(res.data);
       setIsLiked(false);
-      // setChange(change - 1);
+      socket.emit("comment", `post_${currentPost.id}`);
+      socket.emit("notification", `user_${currentPost.user.id}`)
     } else {
       await likePost(currentPost.id, me.accessToken);
       const res = await getPostById(me.accessToken, currentPost.id);
       setCurrentPost(res.data);
       setIsLiked(true);
-      // setChange(change + 1);
+      socket.emit("comment", `post_${currentPost.id}`);
+      socket.emit("notification", `user_${currentPost.user.id}`)
     }
   };
 
   useEffect(() => {
-    post.likes.forEach((like) => {
+    currentPost.likes.forEach((like) => {
       if (like.user.id === me.id) {
         setIsLiked(true);
       }
     });
-  }, []);
+    socket.emit("joinPost", `post_${post.id}` );
+    socket.on("comment", (data) => {
+      console.log(data);
+      reLoadPost();
+    });
+  }, []); 
 
   const LikePostModal = ({ likes }) => {
     return (
@@ -560,7 +576,9 @@ const Post = ({ post }) => {
             <Share />
           </IconButton>
           <IconButton onClick={toggleComments} aria-label="comment">
-            <Comment />
+            <Badge badgeContent={currentPost.comments.length} color="primary">
+              <Comment />
+            </Badge>
           </IconButton>
         </CardActions>
         {currentPost.likes.length + change > 0 && (
