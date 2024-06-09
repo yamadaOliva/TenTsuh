@@ -4,7 +4,15 @@ import Feed from "../../component/Feed/Feed";
 import Add from "../../component/Add/Add";
 import { Box } from "@mui/material";
 import Header from "../../component/Header/Header";
+import { useState } from "react";
+import { createTheme } from "@mui/material/styles";
 export default function ProfileApp() {
+  const [mode, setMode] = useState("light");
+  const darkTheme = createTheme({
+    palette: {
+      mode: mode,
+    },
+  });
   return (
     <>
       <Header />
@@ -14,7 +22,7 @@ export default function ProfileApp() {
         color={"text.primary"}
         minHeight={"93.2vh"}
       >
-        <Nav />
+        <Nav setMode={setMode} mode={mode} />
         <Feed />
         <Add />
         <div

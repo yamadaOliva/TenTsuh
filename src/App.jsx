@@ -9,6 +9,7 @@ import { Outlet } from "react-router-dom";
 import { refreshToken } from "./service/auth.service";
 import { getMe } from "./service/user.service";
 import MiniChat from "./component/BoxChat/BoxChat";
+import PostModal from "./component/Feed/PostModal";
 import {
   setAccessToken,
   setRefreshToken,
@@ -61,6 +62,7 @@ function App() {
       <section className="body__container">
         <Outlet />
         {chat.isChatOpen && <MiniChat friend={chat.friend} />}
+        {chat.isPostOpen && <PostModal id={chat.postId} />}
       </section>
     </>
   );

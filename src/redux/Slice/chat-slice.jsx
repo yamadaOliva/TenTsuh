@@ -9,6 +9,8 @@ const initialState = {
     studentId: null,
     online: false,
   },
+  isPostOpen: false,
+  postId: null,
 };
 
 export const chatSlice = createSlice({
@@ -30,7 +32,16 @@ export const chatSlice = createSlice({
         studentId: null,
       };
     },
+    openPost: (state, action) => {
+      state.isPostOpen = true;
+      state.postId = action.payload;
+    },
+    closePost: (state) => {
+      state.isPostOpen = false;
+      state.postId = null;
+    },
   },
 });
-export const { openChat, closeChat } = chatSlice.actions;
+export const { openChat, closeChat, openPost, closePost } =
+  chatSlice.actions;
 export const selectIsChatOpen = (state) => state.chat.isChatOpen;

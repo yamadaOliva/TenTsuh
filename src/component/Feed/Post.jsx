@@ -38,7 +38,7 @@ import {
   unlikePost,
 } from "../../service/post.service";
 import { socket } from "../../socket";
-const Post = ({ post }) => {
+const Post = ({ post, type }) => {
   const navigate = useNavigate();
   const me = useSelector((state) => state.user);
   const [currentPost, setCurrentPost] = useState(post);
@@ -89,12 +89,12 @@ const Post = ({ post }) => {
       await unlikeComment(me.accessToken, commentId);
       await reLoadPost();
       socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${comment.user.id}`)
+      socket.emit("notification", `user_${comment.user.id}`);
     } else {
       await likeComment(me.accessToken, commentId);
       await reLoadPost();
       socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${comment.user.id}`)
+      socket.emit("notification", `user_${comment.user.id}`);
     }
   };
 
@@ -116,14 +116,14 @@ const Post = ({ post }) => {
       await replyComment(me.accessToken, comment.id, replyText);
       await reLoadPost();
       socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${comment.user.id}`)
+      socket.emit("notification", `user_${comment.user.id}`);
       setReplyText("");
       setShowReply(false);
     };
 
     return (
       <>
-        <ListItem 
+        <ListItem
           alignItems="flex-start"
           style={{
             display: "flex",
@@ -222,7 +222,7 @@ const Post = ({ post }) => {
               >
                 {reply.likes.length > 0 ? reply.likes.length : ""}
               </Typography>
-              
+
               <IconButton
                 aria-label="like reply"
                 onClick={() => likeCommentHandler(reply)}
@@ -257,56 +257,63 @@ const Post = ({ post }) => {
       const res = await commentPost(accessToken, postId, newComment);
       await reLoadPost();
       socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${currentPost.user.id}`)
+      socket.emit("notification", `user_${currentPost.user.id}`);
       setNewComment("");
     };
 
     return (
-      <div
-        style={{ padding: "0 1rem 1rem 1rem", borderTop: "1px solid #C0C0C0" }}
-      >
-        <Typography
-          variant="body2"
-          color="text.secondary"
+      <>
+        <div
           style={{
-            fontSize: "1rem",
-            fontWeight: "600",
-            color: "#000000",
-            marginTop: "1rem",
-            marginLeft: "1rem",
+            padding: "0 1rem 1rem 1rem",
+            borderTop: "1px solid #C0C0C0",
+            overflowY: type === "mini" ? "auto" : "visible",
+            maxHeight: type === "mini" ? "25vh" : "auto",
           }}
         >
-          {currentPost.comments.length} bình luận
-        </Typography>
-        <List>
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              addReply={addReply}
-              handleLike={handleLike}
-            />
-          ))}
-        </List>
-        <TextField
-          fullWidth
-          value={newComment}
-          onChange={handleCommentChange}
-          placeholder="Viết bình luận..."
-          variant="outlined"
-        />
-        <Button
-          onClick={submitComment}
-          style={{
-            marginTop: "1rem",
-            borderRadius: "10px",
-            backgroundColor: "#3f51b5",
-            color: "#fff",
-          }}
-        >
-          Bình luận
-        </Button>
-      </div>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            style={{
+              fontSize: "1rem",
+              fontWeight: "600",
+              color: "#000000",
+              marginTop: "1rem",
+              marginLeft: "1rem",
+            }}
+          >
+            {currentPost.comments.length} bình luận
+          </Typography>
+          <List>
+            {comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                addReply={addReply}
+                handleLike={handleLike}
+              />
+            ))}
+          </List>
+          <TextField
+            fullWidth
+            value={newComment}
+            onChange={handleCommentChange}
+            placeholder="Viết bình luận..."
+            variant="outlined"
+          />
+          <Button
+            onClick={submitComment}
+            style={{
+              marginTop: "1rem",
+              borderRadius: "10px",
+              backgroundColor: "#3f51b5",
+              color: "#fff",
+            }}
+          >
+            Bình luận
+          </Button>
+        </div>
+      </>
     );
   };
 
@@ -386,14 +393,14 @@ const Post = ({ post }) => {
       setCurrentPost(res.data);
       setIsLiked(false);
       socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${currentPost.user.id}`)
+      socket.emit("notification", `user_${currentPost.user.id}`);
     } else {
       await likePost(currentPost.id, me.accessToken);
       const res = await getPostById(me.accessToken, currentPost.id);
       setCurrentPost(res.data);
       setIsLiked(true);
       socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${currentPost.user.id}`)
+      socket.emit("notification", `user_${currentPost.user.id}`);
     }
   };
 
@@ -403,12 +410,12 @@ const Post = ({ post }) => {
         setIsLiked(true);
       }
     });
-    socket.emit("joinPost", `post_${post.id}` );
+    socket.emit("joinPost", `post_${post.id}`);
     socket.on("comment", (data) => {
       console.log(data);
       reLoadPost();
     });
-  }, []); 
+  }, []);
 
   const LikePostModal = ({ likes }) => {
     return (
@@ -429,8 +436,8 @@ const Post = ({ post }) => {
           border: "2px solid #000",
           maxHeight: "30vh",
           width: "80%",
-          maxWidth: "400px", 
-          zIndex: 1000, 
+          maxWidth: "400px",
+          zIndex: 1000,
           overflow: "auto",
         }}
       >
@@ -481,6 +488,7 @@ const Post = ({ post }) => {
           marginTop: "10px",
           height: "fit-content",
           position: "relative",
+          width: 800,
         }}
       >
         <CardHeader
@@ -597,7 +605,7 @@ const Post = ({ post }) => {
               setCurrentLikes(currentPost.likes);
             }}
           >
-            {currentPost.likes.length } thích
+            {currentPost.likes.length} thích
           </Typography>
         )}
         {showComments && (

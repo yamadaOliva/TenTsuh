@@ -11,7 +11,11 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { date } from "../../utils/index";
+import { useDispatch } from "react-redux";
+import { openPost } from "../../redux/Slice/chat-slice";
 export default function NotificationUnit({ data, handleDeleteNotification }) {
+  console.log(data);
+  const dispatch = useDispatch();
   return (
     <>
       <Card
@@ -68,7 +72,9 @@ export default function NotificationUnit({ data, handleDeleteNotification }) {
               justifyContent: "center",
             }}
           >
-            <Button size="small" color="primary">
+            <Button size="small" color="primary"
+              onClick={() => dispatch(openPost(data.meta))}
+            >
               Xem
             </Button>
           </CardActions>
