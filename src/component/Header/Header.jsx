@@ -117,6 +117,11 @@ export default function Header() {
     handleClose();
   };
 
+  const handleChangePassword = () => {
+    navigate("/change-password");
+    handleClose();
+  };
+  
   const handleLogoutClick = async () => {
     handleClose();
     dispatch(logout());
@@ -357,6 +362,9 @@ export default function Header() {
             >
               <MenuItem onClick={handleProfileClick}>
                 Thông tin cá nhân
+              </MenuItem>
+              <MenuItem onClick={handleChangePassword}>
+              Đổi mật khẩu
               </MenuItem>
               <MenuItem onClick={handleLogoutClick}>Đăng xuất</MenuItem>
             </Menu>

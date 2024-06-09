@@ -518,6 +518,11 @@ export default function Friend() {
                           ? friend.user?.name
                           : friend?.name}
                       </Typography>
+                      {friend?.mutualFriends != 0 && (
+                        <Typography variant="subtitle1">
+                          Bạn chung: {friend.mutualFriends}
+                        </Typography>
+                      )}
                     </Box>
 
                     <Box

@@ -196,7 +196,15 @@ export default function Profile() {
     <>
       <Header />
 
-    <section className="profile">
+    <section className="profile"
+        
+        style={{
+          backgroundImage: `url("/bg1.jpg")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+        >
       <Grid container justifyContent="center" alignItems="center" height="100%">
         <Paper
           elevation={3}

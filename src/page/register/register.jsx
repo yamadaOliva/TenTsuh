@@ -209,7 +209,7 @@ export default function Register() {
       toast.error("Ngày sinh không được để trống");
       return false;
     }
-    
+
     let studentId1 = email.split("@")[0].split(".")[1].slice(2);
     if (studentId.slice(2) !== studentId1) {
       toast.error("Mã sinh viên không khớp với email");
@@ -242,9 +242,11 @@ export default function Register() {
       const res = await register(data);
       console.log(res);
       if (+res?.EC === 200) {
-        toast.success("Đăng ký thành công, hãy đăng nhập outlook để xác nhận danh tính hoặc ấn đăng nhập với Office 365");
+        toast.success(
+          "Đăng ký thành công, hãy đăng nhập outlook để xác nhận danh tính hoặc ấn đăng nhập với Office 365"
+        );
         navigate("/login");
-      }else{
+      } else {
         toast.error(res?.message);
       }
     } catch (error) {
@@ -253,7 +255,16 @@ export default function Register() {
   };
   return (
     <>
-      <section className="auth">
+      <section
+        className="auth"
+        style={{
+          backgroundImage: `url("/bg.jpeg")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          height: "100vh",
+        }}
+      >
         <Grid>
           <Paper style={paperStyle} elevation={20}>
             <Grid align="center">
@@ -309,7 +320,6 @@ export default function Register() {
                         value={currentProvince}
                         onChange={(e) => {
                           setCurrentProvince(e.target.value);
-                        
                         }}
                       >
                         {province.map((option, index) => (

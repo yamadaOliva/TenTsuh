@@ -27,4 +27,37 @@ const logoutBE = (accessToken) => {
 const activeAccount = (token) => {
   return axios.get(`/auth/active/${token}`);
 };
-export { login, register, refreshToken, login365, logoutBE, activeAccount };
+
+const changePassword = (accessToken, data) => {
+  console.log(data);
+  axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+  return axios.post("/auth/change-password", data);
+};
+
+const forgotPassword = (email) => {
+  return axios.post("/auth/forgot-password", { email });
+};
+
+const verifyForgotPassword = (token) => {
+  return axios.post(`/auth/verify-forgot-password/`, {token});
+};
+
+const resetPassword = (token, password) => {
+  const data = {
+    password: password,
+    token: token,
+  };
+  return axios.post(`/auth/reset-password`, data);
+};
+export {
+  login,
+  register,
+  refreshToken,
+  login365,
+  logoutBE,
+  activeAccount,
+  changePassword,
+  forgotPassword,
+  verifyForgotPassword,
+  resetPassword,
+};

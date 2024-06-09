@@ -18,6 +18,9 @@ import Friend from "./page/friend/fiend.jsx";
 import Group from "./page/group/group.jsx";
 import NotFound from "./page/404/notFound.jsx";
 import ActivePage from "./page/active/active.jsx";
+import ChangePassword from "./page/changePassword/changePassword.jsx";
+import ForgotPassword from "./page/forgotPassword/forgotPassword.jsx";
+import ResetPassword from "./page/resetPassword/resetPassword.jsx";
 //Azure
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
 import { msalConfig } from "./setup/auth-config.jsx";
@@ -46,7 +49,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <PersistGate loading={null} persistor={persistor}>
       <BrowserRouter>
         <Routes>
-          <Route path="*" element={<NotFound />} />
           <Route path="/" element={<App />}>
             <Route path="home" element={<Home />} />
             <Route path="profile" element={<Profile />} />
@@ -58,6 +60,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />
           <Route path="auth/active/:token" element={<ActivePage />} />
+          <Route path="change-password" element={<ChangePassword />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="auth/reset/:token" element={<ResetPassword />} />
+          <Route path="*" element={<NotFound />} />
+
         </Routes>
         <ToastContainer
           position="top-right"
