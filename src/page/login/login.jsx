@@ -171,11 +171,19 @@ export default function Login({ instance }) {
   };
   return (
     <>
-      <section className="auth">
+      <section className="auth"
+      style={{
+        backgroundImage: `url("/bg.jpeg")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        height: "100vh",
+      }}
+      >
         <Grid>
           <Paper elevation={6} style={paperStyle}>
             <Grid align="center">
-              <Avatar src="iconHust.png"></Avatar>
+              <Avatar src="/iconHust.png"></Avatar>
               <h2 className="mt-4">Chào mừng đến với TenTsuh</h2>
             </Grid>
             <TextField
