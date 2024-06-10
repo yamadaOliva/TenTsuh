@@ -49,7 +49,12 @@ const Nav = ({ mode, setMode }) => {
           </ListItem>
 
           <ListItem disablePadding>
-            <ListItemButton component="a">
+            <ListItemButton
+              component="a"
+              onClick={() => {
+                navigate("/group");
+              }}
+            >
               <ListItemIcon>
                 <Group />
               </ListItemIcon>
@@ -71,11 +76,11 @@ const Nav = ({ mode, setMode }) => {
           </ListItem>
 
           <ListItem disablePadding>
-            <ListItemButton component="a"
+            <ListItemButton
+              component="a"
               onClick={() => {
                 navigate("/friend");
-              }
-              }
+              }}
             >
               <ListItemIcon>
                 <Person />

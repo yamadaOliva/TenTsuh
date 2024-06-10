@@ -15,7 +15,7 @@ import Message from "./page/message/message.jsx";
 import Profile from "./page/profile/profile.jsx";
 import ProfileApp from "./page/profilePage/profilepage.jsx";
 import Friend from "./page/friend/fiend.jsx";
-import Group from "./page/group/group.jsx";
+import GroupPage from "./page/group/group.jsx";
 import NotFound from "./page/404/notFound.jsx";
 import ActivePage from "./page/active/active.jsx";
 import ChangePassword from "./page/changePassword/changePassword.jsx";
@@ -55,7 +55,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="message" element={<Message />} />
             <Route path="profilepage/:id" element={<ProfileApp />} />
             <Route path="friend" element={<Friend />} />
-            <Route path="group" element={<Group />} />
+            <Route path="group" element={<GroupPage />} />
           </Route>
           <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />
