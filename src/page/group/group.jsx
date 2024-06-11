@@ -31,6 +31,7 @@ import {
   getGroup,
   getRecommendGroup,
   requestJoinGroup,
+  leaveGroup,
 } from "../../service/group.service";
 const useStyles = makeStyles((theme) => ({
   root: {

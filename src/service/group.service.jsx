@@ -18,4 +18,15 @@ const requestJoinGroup = (accessToken, groupId) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
   return axios.post("/group/join", { groupId });
 };
-export { createGroup, getGroup, getRecommendGroup, requestJoinGroup };
+
+const leaveGroup = (accessToken, groupId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+  return axios.post("/group/leave", { groupId });
+};
+export {
+  createGroup,
+  getGroup,
+  getRecommendGroup,
+  requestJoinGroup,
+  leaveGroup,
+};
