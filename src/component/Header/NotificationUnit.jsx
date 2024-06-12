@@ -13,7 +13,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { date } from "../../utils/index";
 import { useDispatch } from "react-redux";
 import { openPost } from "../../redux/Slice/chat-slice";
+import { useNavigate } from "react-router-dom";
 export default function NotificationUnit({ data, handleDeleteNotification }) {
+  const navigate = useNavigate();
   console.log(data);
   const dispatch = useDispatch();
   return (
@@ -72,8 +74,16 @@ export default function NotificationUnit({ data, handleDeleteNotification }) {
               justifyContent: "center",
             }}
           >
-            <Button size="small" color="primary"
-              onClick={() => dispatch(openPost(data.meta))}
+            <Button
+              size="small"
+              color="primary"
+              onClick={() => {
+                if (data.type == "GROUP") {
+                  navigate(`/group/${data.meta}`);
+                  return;
+                }
+                dispatch(openPost(data.meta));
+              }}
             >
               Xem
             </Button>

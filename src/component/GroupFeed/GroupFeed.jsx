@@ -1,11 +1,45 @@
-import { Box, Stack, Skeleton, Fab, Modal, TextField, ButtonGroup, Button, IconButton, Typography, Avatar, Tooltip, styled, Badge, Card, CardMedia, CardContent } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Skeleton,
+  Fab,
+  Modal,
+  TextField,
+  ButtonGroup,
+  Button,
+  IconButton,
+  Typography,
+  Avatar,
+  Tooltip,
+  styled,
+  Badge,
+  Card,
+  CardMedia,
+  CardContent,
+  Paper,
+  Divider,
+} from "@mui/material";
 import { useEffect, useState, useRef } from "react";
 import Post from "../Feed/Post";
-import { getPotsOfUser, createPost } from "../../service/post.service"; // Lấy bài viết của người dùng
+import { getPotsOfUser, createPost } from "../../service/post.service";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { Add as AddIcon, DateRange, EmojiEmotions, Image, Group as GroupIcon } from "@mui/icons-material";
+import { socket } from "../../socket";
+import { useNavigate } from "react-router-dom";
+import {
+  Add as AddIcon,
+  DateRange,
+  EmojiEmotions,
+  Image,
+  Group as GroupIcon,
+} from "@mui/icons-material";
 import { toast } from "react-toastify";
+import {
+  getGroupDetail,
+  getRequests,
+  acceptRequest,
+  rejectRequest,
+} from "../../service/group.service";
 
 const StyledModal = styled(Modal)({
   display: "flex",
@@ -20,9 +54,16 @@ const UserBox = styled(Box)({
   marginBottom: "20px",
 });
 
+const CustomCard = styled(Card)({
+  borderRadius: 15,
+  boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
+});
+
 const GroupFeed = () => {
+  const navigate = useNavigate();
+  const me = useSelector((state) => state.user);
   const PER_PAGE = 5;
-  const { id } = useParams(); // id này là groupId
+  const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
@@ -31,20 +72,19 @@ const GroupFeed = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [openRequests, setOpenRequests] = useState(false);
+  const [group, setGroup] = useState({});
+  const [openMembers, setOpenMembers] = useState(false); 
   const accessToken = useSelector((state) => state.user.accessToken);
   const userId = useSelector((state) => state.user.id);
   const user = useSelector((state) => state.user);
+  const [requests, setRequests] = useState([]);
 
   const fakeGroupDetails = {
     name: "Nhóm 1",
-    imageUrl: "https://play-lh.googleusercontent.com/uJxoDY7gP76P1vjAFfo1nGFZBYRGYtBDTxv0OrkP_4a1x7ZpO7gC5AF2xR6qj-WVefY=w240-h480-rw",
+    imageUrl:
+      "https://play-lh.googleusercontent.com/uJxoDY7gP76P1vjAFfo1nGFZBYRGYtBDTxv0OrkP_4a1x7ZpO7gC5AF2xR6qj-WVefY=w240-h480-rw",
     memberCount: 10,
   };
-
-  const fakeJoinRequests = [
-    { id: 1, name: "Alice", avatarUrl: "https://via.placeholder.com/150" },
-    { id: 2, name: "Bob", avatarUrl: "https://via.placeholder.com/150" },
-  ];
 
   const fakeOnlineMembers = [
     { id: 1, name: "Alice", avatarUrl: "https://via.placeholder.com/150" },
@@ -53,18 +93,18 @@ const GroupFeed = () => {
   ];
 
   useEffect(() => {
-	const getPosts = async () => {
-	  const res = await getPotsOfUser(userId);
-	  setPosts(res.data);
-	  setLoading(false);
-	};		
-
-    setTimeout(() => {
-      
+    const getPosts = async () => {
+      const res = await getPotsOfUser(userId);
+      const resGroup = await getGroupDetail(accessToken, id);
+      const resRequests = await getRequests(accessToken, id);
+      console.log(resRequests);
+      setGroup(resGroup.data);
+      setPosts(res.data);
       setLoading(false);
-    }, 1000);
-	getPosts();
-  }, [userId]);
+      setRequests(resRequests.data);
+    };
+    getPosts();
+  }, [userId, accessToken, id]);
 
   const validate = () => {
     if (!title || !content) {
@@ -72,7 +112,27 @@ const GroupFeed = () => {
       return false;
     }
     return true;
-  }
+  };
+
+  const handleAcceptRequest = async (requestId) => {
+    const res = await acceptRequest(accessToken, requestId);
+    console.log(res);
+    if (res.EC === 200) {
+      await socket.emit("notification", `user_${res.data.userId}` )
+      toast.success("Chấp nhận yêu cầu thành công");
+      const newRequests = requests.filter((req) => req.id !== requestId);
+      setRequests(newRequests);
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    const res = await rejectRequest(accessToken, requestId);
+    if (res.EC === 200) {
+      toast.success("Từ chối yêu cầu thành công");
+      const newRequests = request.filter((req) => req.id !== requestId);
+      setRequests(newRequests);
+    }
+  };
 
   const handleCreatePost = () => {
     if (!validate()) return;
@@ -116,15 +176,18 @@ const GroupFeed = () => {
   }, []);
 
   return (
-    <Box
-      display="flex"
-      p={{ xs: 0, md: 2 }}
-      style={{
-        paddingRight: "20px",
-      }}
-    >
-      <Box flex={1} p={2}>
-        <Card>
+    <Box display="flex" p={{ xs: 0, md: 2 }} style={{ paddingRight: "20px" }}>
+      <Box
+        flex={1}
+        p={2}
+        sx={{
+          position: "fixed",
+          width: "15%",
+          height: "100%",
+          overflow: "auto",
+        }}
+      >
+        <CustomCard>
           <CardMedia
             component="img"
             alt="group image"
@@ -132,9 +195,9 @@ const GroupFeed = () => {
             image={fakeGroupDetails.imageUrl}
           />
           <CardContent>
-            <Typography variant="h6">{fakeGroupDetails.name}</Typography>
+            <Typography variant="h6">{group?.name}</Typography>
             <Typography variant="body2" color="textSecondary">
-              {fakeGroupDetails.memberCount} thành viên
+              {group?.members?.length} thành viên
             </Typography>
             <Box
               display="flex"
@@ -142,22 +205,29 @@ const GroupFeed = () => {
               alignItems="center"
               mt={2}
             >
-              <Typography variant="body2" color="textSecondary">
-                Yêu cầu tham gia:
-              </Typography>
-              <Badge
-                badgeContent={fakeJoinRequests.length}
-                color="secondary"
-                onClick={() => setOpenRequests(true)}
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                onClick={() => setOpenMembers(true)}
                 sx={{ cursor: "pointer" }}
               >
-                <GroupIcon color="action" />
-              </Badge>
+                Xem thành viên
+              </Typography>
+              {me?.id == group?.OwnerId && (
+                <Badge
+                  badgeContent={requests.length}
+                  color="secondary"
+                  onClick={() => setOpenRequests(true)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <GroupIcon color="action" />
+                </Badge>
+              )}
             </Box>
           </CardContent>
-        </Card>
+        </CustomCard>
       </Box>
-      <Box flex={4}>
+      <Box flex={4} sx={{ marginLeft: "15%", marginRight: "15%" }}>
         <Tooltip
           onClick={() => setOpen(true)}
           title="Tạo bài đăng"
@@ -184,10 +254,12 @@ const GroupFeed = () => {
             color={"text.primary"}
             p={3}
             borderRadius={5}
+            boxShadow={3}
           >
             <Typography variant="h6" color="gray" textAlign="center">
               Tạo bài đăng
             </Typography>
+            <Divider />
             <UserBox>
               <Avatar
                 src={user?.avatarUrl}
@@ -203,7 +275,7 @@ const GroupFeed = () => {
               </Typography>
             </UserBox>
             <TextField
-              sx={{ width: "100%" }}
+              sx={{ width: "100%", mb: 2 }}
               id="standard-multiline-static"
               multiline
               rows={1}
@@ -212,7 +284,7 @@ const GroupFeed = () => {
               onChange={(e) => setTitle(e.target.value)}
             />
             <TextField
-              sx={{ width: "100%" }}
+              sx={{ width: "100%", mb: 2 }}
               id="standard-multiline-static"
               multiline
               placeholder="Nội dung"
@@ -230,6 +302,7 @@ const GroupFeed = () => {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  mb: 2,
                 }}
               >
                 <img
@@ -278,20 +351,96 @@ const GroupFeed = () => {
           </>
         )}
       </Box>
-      <Box flex={1} p={2}>
+      <Box
+        flex={1}
+        p={2}
+        sx={{
+          position: "fixed",
+          right: 0,
+          width: "15%",
+          height: "100%",
+          overflow: "auto",
+        }}
+      >
         <Typography variant="h6" gutterBottom>
           Thành viên trực tuyến
         </Typography>
-        {fakeOnlineMembers.map((member) => (
-          <Box key={member.id} display="flex" alignItems="center" gap={2} mt={2}>
-            <Avatar src={member.avatarUrl} />
-            <Typography variant="body1">{member.name}</Typography>
-          </Box>
-        ))}
+        <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+          {fakeOnlineMembers.map((member) => (
+            <Box
+              key={member.id}
+              display="flex"
+              alignItems="center"
+              gap={2}
+              mt={2}
+            >
+              <Avatar src={member.avatarUrl} />
+              <Typography variant="body1">{member.name}</Typography>
+            </Box>
+          ))}
+        </Paper>
       </Box>
       <StyledModal
         open={openRequests}
         onClose={() => setOpenRequests(false)}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box
+          width={600}
+          height="auto"
+          bgcolor="white"
+          color={"text.primary"}
+          p={3}
+          borderRadius={5}
+          boxShadow={3}
+        >
+          <Typography variant="h6" color="gray" textAlign="center">
+            Yêu cầu tham gia nhóm
+          </Typography>
+          <Divider />
+          {requests.length > 0 ? (
+            requests.map((req) => (
+              <Box
+                key={req.id}
+                display="flex"
+                alignItems="center"
+                gap={2}
+                mt={2}
+              >
+                <Avatar src={req.user.avatarUrl} />
+                <Typography variant="body1">{req.user.name}</Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => {
+                    console.log(req.id);
+                    handleAcceptRequest(req.id);
+                  }}
+                >
+                  Đồng ý
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => {
+                    handleRejectRequest(req.id);
+                  }}
+                >
+                  Từ chối
+                </Button>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body1" textAlign="center" mt={2}>
+              Không có yêu cầu tham gia nhóm
+            </Typography>
+          )}
+        </Box>
+      </StyledModal>
+      <StyledModal
+        open={openMembers}
+        onClose={() => setOpenMembers(false)}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
@@ -302,32 +451,31 @@ const GroupFeed = () => {
           color={"text.primary"}
           p={3}
           borderRadius={5}
+          boxShadow={3}
         >
           <Typography variant="h6" color="gray" textAlign="center">
-            Yêu cầu tham gia nhóm
+            Danh sách thành viên
           </Typography>
-          {fakeJoinRequests.map((req) => (
-            <Box key={req.id} display="flex" alignItems="center" gap={2} mt={2}>
-              <Avatar src={req.avatarUrl} />
-              <Typography variant="body1">{req.name}</Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => {
-                  toast.success(`Chấp nhận yêu cầu từ ${req.name}`);
+          <Divider />
+          {group?.members?.map((member) => (
+            <Box
+              key={member.id}
+              display="flex"
+              alignItems="center"
+              gap={2}
+              mt={2}
+            >
+              <Avatar
+                src={member.user.avatarUrl}
+                sx={{
+                  borderColor: "primary.main",
+                  borderWidth: 1,
+                  cursor: "pointer",
                 }}
-              >
-                Đồng ý
-              </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => {
-                  toast.error(`Từ chối yêu cầu từ ${req.name}`);
-                }}
-              >
-                Từ chối
-              </Button>
+                onClick={() => navigate(`/profilepage/${member.user.id}`)}
+              />
+              <Typography variant="body1">{member.user.name} </Typography>
+              <Typography variant="body1">{member.user.studentId} </Typography>
             </Box>
           ))}
         </Box>
