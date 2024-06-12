@@ -217,7 +217,6 @@ export default function Profile() {
         >
           <Box textAlign="center">
             {" "}
-            {/* Đảm bảo component Upload nằm ở giữa */}
             <Upload
               backgroundImage={image}
               setAvatarUrl={setImage}

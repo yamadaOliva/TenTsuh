@@ -26,6 +26,7 @@ import { GroupAdd, Group, ExitToApp, Search } from "@material-ui/icons";
 import Header from "../../component/Header/Header";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import {useNavigate} from "react-router-dom";
 import {
   createGroup,
   getGroup,
@@ -83,6 +84,7 @@ const fakeMyGroups = [
 ];
 
 export default function GroupPage() {
+  const navigate = useNavigate();
   const me = useSelector((state) => state.user);
   const classes = useStyles();
   const [groups, setGroups] = useState(fakeGroups);
@@ -97,8 +99,8 @@ export default function GroupPage() {
   const handleCreateGroup = async () => {
     const res = await createGroup(me.accessToken, newGroupName);
     if (res?.EC === 200) {
-      const newGroup = [...myGroups, res.data];
-      setMyGroups(newGroup);
+      const newGroup = await getGroup(me.accessToken);
+      setMyGroups(newGroup.data);
       setNewGroupName("");
       setOpenCreateGroupDialog(false);
       toast.success("Tạo nhóm thành công");
@@ -205,6 +207,9 @@ export default function GroupPage() {
                       />
                       <CardContent>
                         <Typography variant="h6">{group.name}</Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {group.memberCount} thành viên
+                        </Typography>
                         <Box
                           display="flex"
                           gap="10px"
@@ -244,51 +249,58 @@ export default function GroupPage() {
                 </Button>
               </Box>
               <Grid container spacing={3}>
-                {myGroups.map((group) => (
-                  <Grid item xs={12} sm={6} md={4} key={group.id}>
-                    <Card className={classes.groupCard}>
-                      <CardMedia
-                        className={classes.media}
-                        image={imageUrl}
-                        title={group.group.name}
-                      />
-                      <CardContent>
-                        <Typography variant="h6">{group.group.name}</Typography>
-                        <Box
-                          display="flex"
-                          gap="10px"
-                          alignItems="center"
-                          mt={2}
-                        >
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            startIcon={<Group />}
-                            onClick={() =>
-                              console.log("Accessing group:", group.id)
-                            }
-                            style={{ marginRight: "8px" }}
+                {myGroups.length > 0 &&
+                  myGroups.map((group) => (
+                    <Grid item xs={12} sm={6} md={4} key={group.id}>
+                      <Card className={classes.groupCard}>
+                        <CardMedia
+                          className={classes.media}
+                          image={imageUrl}
+                          title={group?.name}
+                          style={{
+                            objectFit: "cover",
+                          }}
+                        />
+                        <CardContent>
+                          <Typography variant="h6">{group?.name}</Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            {group?.memberCount} thành viên
+                          </Typography>
+                          <Box
+                            display="flex"
+                            gap="10px"
+                            alignItems="center"
+                            mt={2}
                           >
-                            Truy cập nhóm
-                          </Button>
-                          {me.id !== group.group.OwnerId && (
                             <Button
                               variant="contained"
-                              color="secondary"
-                              startIcon={<ExitToApp />}
-                              onClick={() => {
-                                setSelectedGroup(group);
-                                setOpenLeaveDialog(true);
-                              }}
+                              color="primary"
+                              startIcon={<Group />}
+                              onClick={() =>
+                                navigate(`/group/${group?.id}`)
+                              }
+                              style={{ marginRight: "8px" }}
                             >
-                              Rời nhóm
+                              Truy cập nhóm
                             </Button>
-                          )}
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+                            {me.id !== group?.OwnerId && (
+                              <Button
+                                variant="contained"
+                                color="secondary"
+                                startIcon={<ExitToApp />}
+                                onClick={() => {
+                                  setSelectedGroup(group);
+                                  setOpenLeaveDialog(true);
+                                }}
+                              >
+                                Rời nhóm
+                              </Button>
+                            )}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
               </Grid>
             </>
           )}

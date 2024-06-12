@@ -14,6 +14,8 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { createPost } from "../../service/post.service";
 import { toast } from "react-toastify";
+import emojiData from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import {
   Add as AddIcon,
   DateRange,
@@ -42,6 +44,8 @@ const Add = () => {
   const [image, setImage] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [currentChange, setCurrentChange] = useState("title");
   const accessToken = useSelector((state) => state.user.accessToken);
 
   //function
@@ -51,7 +55,7 @@ const Add = () => {
       return false;
     }
     return true;
-  }
+  };
 
   const handleCreatePost = async () => {
     if (!validate()) return;
@@ -65,7 +69,7 @@ const Add = () => {
       toast.success("Tạo bài viết thành công");
       setOpen(false);
     }
-  }
+  };
   //useEffect
   const cloudinaryRef = useRef();
   const widgetRef = useRef();
@@ -166,56 +170,82 @@ const Add = () => {
             rows={1}
             placeholder="Bạn đang cảm thấy thế nào"
             variant="standard"
-            onChange={(e) => setTitle(e.target.value)}
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setCurrentChange("title");
+            }}
           />
           <TextField
             sx={{ width: "100%" }}
             id="standard-multiline-static"
             multiline
+            value={content}
             placeholder="Nội dung"
             variant="standard"
             rows={4}
             maxRows={10}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setCurrentChange("content");
+            }}
           />
           {image && (
             <Box
-            sx={{
-              height: "200px",
-              borderRadius: 5,
-              overflow: "hidden",
-              display: "flex", 
-              justifyContent: "center", 
-              alignItems: "center", 
-            }}
-          >
-            <img
-              src={image}
-              alt="preview"
-              style={{
-                objectFit: "contain", 
-                width: "100%", 
-                height: "100%", 
+              sx={{
+                height: "200px",
+                borderRadius: 5,
+                overflow: "hidden",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}
-            />
-          </Box>
+            >
+              <img
+                src={image}
+                alt="preview"
+                style={{
+                  objectFit: "contain",
+                  width: "100%",
+                  height: "100%",
+                }}
+              />
+            </Box>
           )}
           <Stack direction="row" gap={1} mt={2} mb={3}>
             <IconButton onClick={() => widgetRef.current?.open()}>
               <Image color="secondary" />
             </IconButton>
-            <IconButton onClick={() => widgetRef.current?.open()}>
+            <IconButton
+              onClick={() => {
+                setShowEmojiPicker(!showEmojiPicker);
+              }}
+            >
               <EmojiEmotions color="primary" />
             </IconButton>
+            {showEmojiPicker && (
+              <Picker
+                data={emojiData}
+                onEmojiSelect={(emoji) => {
+                  console.log(emoji.native);
+                  if (currentChange == "title") {
+                    setTitle(title + emoji.native);
+                    console.log(title);
+                    setShowEmojiPicker(false);
+                  } else {
+                    setContent(content + emoji.native);
+                    setShowEmojiPicker(false);
+                  }
+                }}
+              />
+            )}
           </Stack>
           <ButtonGroup
             fullWidth
             variant="contained"
             aria-label="outlined primary button group"
           >
-            <Button
-              onClick={handleCreatePost}
-            >Đăng</Button>
+            <Button onClick={handleCreatePost}>Đăng</Button>
             <Button sx={{ width: "100px" }}>
               <DateRange />
             </Button>
