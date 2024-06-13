@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Box,
   Stack,
@@ -18,14 +19,22 @@ import {
   CardContent,
   Paper,
   Divider,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
 } from "@mui/material";
 import { useEffect, useState, useRef } from "react";
 import Post from "../Feed/Post";
-import { getPotsOfUser, createPost } from "../../service/post.service";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { socket } from "../../socket";
 import { useNavigate } from "react-router-dom";
+import emojiData from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+import { createPostGroup, getPostGroup } from "../../service/post.service";
+import { openChat } from "../../redux/Slice/chat-slice";
+import { getGroupMemberOnline } from "../../service/post.service";
 import {
   Add as AddIcon,
   DateRange,
@@ -40,6 +49,7 @@ import {
   acceptRequest,
   rejectRequest,
 } from "../../service/group.service";
+import { green } from "@mui/material/colors";
 
 const StyledModal = styled(Modal)({
   display: "flex",
@@ -61,6 +71,7 @@ const CustomCard = styled(Card)({
 
 const GroupFeed = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const me = useSelector((state) => state.user);
   const PER_PAGE = 5;
   const { id } = useParams();
@@ -73,12 +84,14 @@ const GroupFeed = () => {
   const [content, setContent] = useState("");
   const [openRequests, setOpenRequests] = useState(false);
   const [group, setGroup] = useState({});
-  const [openMembers, setOpenMembers] = useState(false); 
+  const [openMembers, setOpenMembers] = useState(false);
   const accessToken = useSelector((state) => state.user.accessToken);
   const userId = useSelector((state) => state.user.id);
   const user = useSelector((state) => state.user);
   const [requests, setRequests] = useState([]);
-
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [currentChange, setCurrentChange] = useState("title");
+  const [onlineMembers, setOnlineMembers] = useState([]);
   const fakeGroupDetails = {
     name: "Nhóm 1",
     imageUrl:
@@ -86,24 +99,25 @@ const GroupFeed = () => {
     memberCount: 10,
   };
 
-  const fakeOnlineMembers = [
-    { id: 1, name: "Alice", avatarUrl: "https://via.placeholder.com/150" },
-    { id: 2, name: "Bob", avatarUrl: "https://via.placeholder.com/150" },
-    { id: 3, name: "Charlie", avatarUrl: "https://via.placeholder.com/150" },
-  ];
-
   useEffect(() => {
     const getPosts = async () => {
-      const res = await getPotsOfUser(userId);
+      const res = await getPostGroup(accessToken, id);
       const resGroup = await getGroupDetail(accessToken, id);
       const resRequests = await getRequests(accessToken, id);
-      console.log(resRequests);
+      const resOnlineMembers = await getGroupMemberOnline(accessToken, id);
+      console.log(resGroup);
+      console.log(resOnlineMembers);
+      setOnlineMembers(resOnlineMembers.data);
       setGroup(resGroup.data);
       setPosts(res.data);
       setLoading(false);
       setRequests(resRequests.data);
     };
     getPosts();
+    socket.emit("join-group", `group_${id}`);
+    socket.on("refreshGroup", (data) => {
+      getPosts();
+    });
   }, [userId, accessToken, id]);
 
   const validate = () => {
@@ -118,7 +132,7 @@ const GroupFeed = () => {
     const res = await acceptRequest(accessToken, requestId);
     console.log(res);
     if (res.EC === 200) {
-      await socket.emit("notification", `user_${res.data.userId}` )
+      await socket.emit("notification", `user_${res.data.userId}`);
       toast.success("Chấp nhận yêu cầu thành công");
       const newRequests = requests.filter((req) => req.id !== requestId);
       setRequests(newRequests);
@@ -129,23 +143,26 @@ const GroupFeed = () => {
     const res = await rejectRequest(accessToken, requestId);
     if (res.EC === 200) {
       toast.success("Từ chối yêu cầu thành công");
-      const newRequests = request.filter((req) => req.id !== requestId);
+      const newRequests = requests.filter((req) => req.id !== requestId);
       setRequests(newRequests);
     }
   };
 
-  const handleCreatePost = () => {
+  const handleCreatePost = async () => {
     if (!validate()) return;
     const newPost = {
-      id: posts.length + 1,
       title: title,
       content: content,
       imageUrl: image,
-      user,
+      groupId: id,
     };
-    setPosts([newPost, ...posts]);
+    await createPostGroup(newPost, accessToken);
     setOpen(false);
+    setTitle("");
+    setContent("");
+    setImage("");
     toast.success("Tạo bài viết thành công");
+    socket.emit("refreshGroup", `group_${id}`);
   };
 
   const cloudinaryRef = useRef();
@@ -175,6 +192,25 @@ const GroupFeed = () => {
     );
   }, []);
 
+  const StyledBadge = ({ children }) => (
+    <Badge
+      overlap="circular"
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      variant="dot"
+      sx={{
+        "& .MuiBadge-dot": {
+          backgroundColor: green[400],
+          width: 12,
+          height: 12,
+          border: `2px solid white`,
+          borderRadius: "50%",
+        },
+      }}
+    >
+      {children}
+    </Badge>
+  );
+
   return (
     <Box display="flex" p={{ xs: 0, md: 2 }} style={{ paddingRight: "20px" }}>
       <Box
@@ -196,6 +232,14 @@ const GroupFeed = () => {
           />
           <CardContent>
             <Typography variant="h6">{group?.name}</Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              sx={{ cursor: "pointer" }}
+              onClick={() => navigate(`/profilepage/${group.owner.id}`)}
+            >
+              Người sáng lập: {group?.owner?.name}
+            </Typography>
             <Typography variant="body2" color="textSecondary">
               {group?.members?.length} thành viên
             </Typography>
@@ -213,7 +257,7 @@ const GroupFeed = () => {
               >
                 Xem thành viên
               </Typography>
-              {me?.id == group?.OwnerId && (
+              {me?.id === group?.OwnerId && (
                 <Badge
                   badgeContent={requests.length}
                   color="secondary"
@@ -273,15 +317,20 @@ const GroupFeed = () => {
               <Typography fontWeight={500} variant="span">
                 {user?.name}
               </Typography>
+              {/* owner  */}
             </UserBox>
             <TextField
               sx={{ width: "100%", mb: 2 }}
               id="standard-multiline-static"
               multiline
+              value={title}
               rows={1}
               placeholder="Bạn đang cảm thấy thế nào"
               variant="standard"
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setCurrentChange("title");
+                setTitle(e.target.value);
+              }}
             />
             <TextField
               sx={{ width: "100%", mb: 2 }}
@@ -290,8 +339,12 @@ const GroupFeed = () => {
               placeholder="Nội dung"
               variant="standard"
               rows={4}
+              value={content}
               maxRows={10}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setCurrentChange("content");
+                setContent(e.target.value);
+              }}
             />
             {image && (
               <Box
@@ -320,8 +373,28 @@ const GroupFeed = () => {
               <IconButton onClick={() => widgetRef.current?.open()}>
                 <Image color="secondary" />
               </IconButton>
-              <IconButton onClick={() => widgetRef.current?.open()}>
+              <IconButton
+                onClick={() => {
+                  setShowEmojiPicker(!showEmojiPicker);
+                }}
+              >
                 <EmojiEmotions color="primary" />
+                {showEmojiPicker && (
+                  <Picker
+                    data={emojiData}
+                    onEmojiSelect={(emoji) => {
+                      console.log(emoji.native);
+                      if (currentChange == "title") {
+                        setTitle(title + emoji.native);
+                        console.log(title);
+                        setShowEmojiPicker(false);
+                      } else {
+                        setContent(content + emoji.native);
+                        setShowEmojiPicker(false);
+                      }
+                    }}
+                  />
+                )}
               </IconButton>
             </Stack>
             <ButtonGroup
@@ -357,27 +430,40 @@ const GroupFeed = () => {
         sx={{
           position: "fixed",
           right: 0,
-          width: "15%",
           height: "100%",
           overflow: "auto",
+          minWidth: 400,
         }}
       >
         <Typography variant="h6" gutterBottom>
           Thành viên trực tuyến
         </Typography>
         <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-          {fakeOnlineMembers.map((member) => (
-            <Box
-              key={member.id}
-              display="flex"
-              alignItems="center"
-              gap={2}
-              mt={2}
-            >
-              <Avatar src={member.avatarUrl} />
-              <Typography variant="body1">{member.name}</Typography>
-            </Box>
-          ))}
+          <List>
+            {onlineMembers.map((member) => (
+              <ListItem
+                key={member.id}
+                sx={{ mb: 1 }}
+                onClick={() => {
+                  dispatch(openChat({
+                    ...member,
+                    online: true,
+                  }));
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <ListItemAvatar>
+                  <StyledBadge>
+                    <Avatar alt={member?.name} src={member?.avatarUrl} />
+                  </StyledBadge>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={member.name + ` (${member.studentId})`}
+                  secondary={member?.class}
+                />
+              </ListItem>
+            ))}
+          </List>
         </Paper>
       </Box>
       <StyledModal
@@ -474,8 +560,8 @@ const GroupFeed = () => {
                 }}
                 onClick={() => navigate(`/profilepage/${member.user.id}`)}
               />
-              <Typography variant="body1">{member.user.name} </Typography>
-              <Typography variant="body1">{member.user.studentId} </Typography>
+              <Typography variant="body1">{member.user.name}</Typography>
+              <Typography variant="body1">{member.user.studentId}</Typography>
             </Box>
           ))}
         </Box>

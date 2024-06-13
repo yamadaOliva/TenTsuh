@@ -38,7 +38,7 @@ import {
   unlikePost,
 } from "../../service/post.service";
 import { socket } from "../../socket";
-const Post = ({ post, type }) => {
+const Post = ({ post, type, home }) => {
   const navigate = useNavigate();
   const me = useSelector((state) => state.user);
   const [currentPost, setCurrentPost] = useState(post);
@@ -543,6 +543,22 @@ const Post = ({ post, type }) => {
             paddingLeft: "1rem",
           }}
         >
+          {currentPost.type === "GROUP" && home && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              style={{
+                fontSize: "1rem",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                navigate(`/group/${currentPost?.group?.id}`);
+              }}
+            >
+              Bài viết trong nhóm: {currentPost?.group?.name}
+            </Typography>
+          )}
           <Typography
             variant="body2"
             color="text.black"

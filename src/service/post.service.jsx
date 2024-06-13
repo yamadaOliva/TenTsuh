@@ -4,8 +4,8 @@ const createPost = (data, access_token) => {
   return axios.post("/post/create", data);
 };
 
-const getPotsOfUser = (id) => {
-  return axios.get(`/post/get/user/${id}`);
+const getPotsOfUser = (id, page, limit) => {
+  return axios.get(`/post/get/user/${id}/${page}/${limit}`);
 };
 
 const likePost = (postId, access_token) => {
@@ -43,6 +43,25 @@ const unlikeComment = (access_token, commentId) => {
   return axios.delete(`/post/comment/unlike/${commentId}`);
 };
 
+const createPostGroup = (data, access_token) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.post("/post/group", data);
+};
+
+const getPostGroup = (access_token, groupId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.get(`/post/group/${groupId}`);
+};
+
+const getGroupMemberOnline = (access_token, groupId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.get(`/friend/group/${groupId}/online`);
+};
+
+const getPostFollowing = (access_token, page, limit) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.get(`/post/following/${page}/${limit}`);
+};
 export {
   createPost,
   getPotsOfUser,
@@ -53,4 +72,8 @@ export {
   replyComment,
   likeComment,
   unlikeComment,
+  createPostGroup,
+  getPostGroup,
+  getGroupMemberOnline,
+  getPostFollowing,
 };

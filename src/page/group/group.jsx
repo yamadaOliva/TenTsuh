@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { socket } from "../../socket";
 import {
   Typography,
   Container,
@@ -113,8 +114,16 @@ export default function GroupPage() {
     const res = await requestJoinGroup(me.accessToken, groupId);
     if (res?.EC === 200) {
       toast.success("Yêu cầu tham gia nhóm thành công");
-      const newGroups = groups.filter((group) => group.id !== groupId);
+      const newGroups = groups.filter((group) => {
+        if (group.id == groupId){
+          socket.emit("notification", `user_${group.OwnerId}`);
+        }
+        if (group.id !== groupId) return group;
+        
+      }
+        );
       setGroups(newGroups);
+      
     } else {
       toast.error(res?.message);
     }

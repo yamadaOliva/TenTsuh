@@ -23,7 +23,7 @@ export default function Home() {
           minHeight={"93.2vh"}
         >
           <Nav setMode={setMode} mode={mode} />
-          <Feed />
+          <Feed home={true}/>
           <Rightbar />
           <Add />
         </Box>
