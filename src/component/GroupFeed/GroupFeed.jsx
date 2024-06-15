@@ -128,6 +128,12 @@ const GroupFeed = () => {
     return true;
   };
 
+  const deletePost = (postId) => {
+    console.log(postId);
+    const newPosts = posts.filter((post) => post.id !== postId);
+    setPosts(newPosts);
+  };
+
   const handleAcceptRequest = async (requestId) => {
     const res = await acceptRequest(accessToken, requestId);
     console.log(res);
@@ -419,7 +425,7 @@ const GroupFeed = () => {
         ) : (
           <>
             {posts?.map((post) => (
-              <Post key={post.id} post={post} />
+              <Post key={post.id} post={post} deletePostEvent={deletePost} />
             ))}
           </>
         )}
@@ -445,10 +451,12 @@ const GroupFeed = () => {
                 key={member.id}
                 sx={{ mb: 1 }}
                 onClick={() => {
-                  dispatch(openChat({
-                    ...member,
-                    online: true,
-                  }));
+                  dispatch(
+                    openChat({
+                      ...member,
+                      online: true,
+                    })
+                  );
                 }}
                 style={{ cursor: "pointer" }}
               >

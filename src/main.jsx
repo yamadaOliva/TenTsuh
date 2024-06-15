@@ -22,6 +22,7 @@ import ChangePassword from "./page/changePassword/changePassword.jsx";
 import ForgotPassword from "./page/forgotPassword/forgotPassword.jsx";
 import ResetPassword from "./page/resetPassword/resetPassword.jsx";
 import GroupDetail from "./page/groupPage/groupPage.jsx";
+import AdminScreen from "./page/admin/admin.jsx";
 //Azure
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
 import { msalConfig } from "./setup/auth-config.jsx";
@@ -58,6 +59,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="friend" element={<Friend />} />
             <Route path="group" element={<GroupPage />} />
             <Route path="group/:id" element={<GroupDetail />} />
+            <Route path="admin" element={<AdminScreen />} />
           </Route>
           <Route path="/login" element={<Login instance={msalInstance} />} />
           <Route path="register" element={<Register />} />

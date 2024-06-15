@@ -62,6 +62,17 @@ const getPostFollowing = (access_token, page, limit) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
   return axios.get(`/post/following/${page}/${limit}`);
 };
+
+const deletePost = (access_token, postId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.delete(`/post/delete/${postId}`);
+};
+
+const deleteComment = (access_token, commentId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.delete(`/post/comment/delete/${commentId}`);
+};
+
 export {
   createPost,
   getPotsOfUser,
@@ -76,4 +87,6 @@ export {
   getPostGroup,
   getGroupMemberOnline,
   getPostFollowing,
+  deletePost,
+  deleteComment,
 };

@@ -14,7 +14,6 @@ const Feed = ({ home = false }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const userId = useSelector((state) => state.user.id);
-  const observer = useRef();
 
   const fetchPosts = async (page) => {
     setLoading(true);
@@ -22,13 +21,14 @@ const Feed = ({ home = false }) => {
       let res;
       if (id) {
         res = await getPotsOfUser(id, page, PER_PAGE);
+        setPosts(res.data);
       } else {
         res = await getPostFollowing(me.accessToken, page, PER_PAGE);
+        setPosts((prevPosts) => [...prevPosts, ...res.data]);
       }
       if (res.data.length < PER_PAGE) {
         setHasMore(false);
       }
-      setPosts((prevPosts) => [...prevPosts, ...res.data]);
     } catch (error) {
       console.log(error);
     } finally {
@@ -36,23 +36,15 @@ const Feed = ({ home = false }) => {
     }
   };
 
+  const deletePost = (postId) => {
+    const newPosts = posts.filter((post) => post.id !== postId);
+    setPosts(newPosts);
+  };
+
   useEffect(() => {
+    console.log("fetch");
     fetchPosts(page);
   }, [page, id]);
-
-  const lastPostElementRef = useCallback(
-    (node) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setPage((prevPage) => prevPage + 1);
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [loading, hasMore]
-  );
 
   return (
     <Box
@@ -64,9 +56,23 @@ const Feed = ({ home = false }) => {
     >
       {posts.map((post, index) => {
         if (posts.length === index + 1) {
-          return <Post ref={lastPostElementRef} key={post.id} post={post} home={home} />;
+          return (
+            <Post
+              key={post.id}
+              post={post}
+              home={home}
+              deletePost={deletePost}
+            />
+          );
         } else {
-          return <Post key={post.id} post={post} home={home} />;
+          return (
+            <Post
+              key={post.id}
+              post={post}
+              home={home}
+              deletePostEvent={deletePost}
+            />
+          );
         }
       })}
       {loading && (

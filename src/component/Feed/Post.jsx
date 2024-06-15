@@ -6,6 +6,8 @@ import {
   MoreVert,
   Share,
   Comment,
+  Report,
+  Delete,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -25,6 +27,12 @@ import {
   Button,
   Collapse,
   Badge,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { date } from "../../utils/index";
@@ -36,15 +44,18 @@ import {
   unlikeComment,
   likePost,
   unlikePost,
+  deleteComment,
+  deletePost,
 } from "../../service/post.service";
+import { toast } from "react-toastify";
 import { socket } from "../../socket";
-const Post = ({ post, type, home }) => {
+
+const Post = ({ post, type, home, deletePostEvent }) => {
   const navigate = useNavigate();
   const me = useSelector((state) => state.user);
   const [currentPost, setCurrentPost] = useState(post);
   const [isLiked, setIsLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [change, setChange] = useState(0);
   const [isModalLikeOpen, setIsModalLikeOpen] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(currentPost.likes);
   const [comments, setComments] = useState(
@@ -71,6 +82,63 @@ const Post = ({ post, type, home }) => {
       },
     ]
   );
+
+  const [anchorElPost, setAnchorElPost] = useState(null);
+  const [anchorElComment, setAnchorElComment] = useState(null);
+  const [anchorElReply, setAnchorElReply] = useState(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportContent, setReportContent] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const handleMenuPostClick = (event) => {
+    setAnchorElPost(event.currentTarget);
+    setSelectedItem(currentPost);
+  };
+
+  const handleMenuCommentClick = (event, comment) => {
+    setAnchorElComment(event.currentTarget);
+    setSelectedItem(comment);
+  };
+
+  const handleMenuReplyClick = (event, reply) => {
+    setAnchorElReply(event.currentTarget);
+    setSelectedItem(reply);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorElPost(null);
+    setAnchorElComment(null);
+    setAnchorElReply(null);
+    setSelectedItem(null);
+  };
+
+  const handleReportClick = () => {
+    setReportDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleReportDialogClose = () => {
+    setReportDialogOpen(false);
+    setReportContent("");
+  };
+
+  const handleReportSubmit = () => {
+    console.log("Reported content:", reportContent);
+    toast.success("Report submitted successfully");
+    handleReportDialogClose();
+  };
+
+  const handleDeleteClick = async () => {
+    const res = await deletePost(me.accessToken, currentPost.id);
+    if (res.EC != 200) {
+      toast.error(res.message);
+    } else {
+      deletePostEvent(currentPost.id);
+      toast.success("Deleted successfully");
+    }
+
+    handleMenuClose();
+  };
 
   const likeCommentHandler = async (comment) => {
     console.log(comment);
@@ -104,7 +172,7 @@ const Post = ({ post, type, home }) => {
     );
   };
 
-  const CommentItem = ({ comment, addReply, handleLike }) => {
+  const CommentItem = ({ comment }) => {
     const [replyText, setReplyText] = useState("");
     const [showReply, setShowReply] = useState(false);
 
@@ -113,7 +181,10 @@ const Post = ({ post, type, home }) => {
     };
 
     const submitReply = async () => {
-      await replyComment(me.accessToken, comment.id, replyText);
+      const res = await replyComment(me.accessToken, comment.id, replyText);
+      if (res.EC != 200) {
+        toast.error(res.message);
+      }
       await reLoadPost();
       socket.emit("comment", `post_${currentPost.id}`);
       socket.emit("notification", `user_${comment.user.id}`);
@@ -176,6 +247,27 @@ const Post = ({ post, type, home }) => {
           >
             <Comment />
           </IconButton>
+          <IconButton
+            aria-label="more options"
+            onClick={(e) => handleMenuCommentClick(e, comment)}
+          >
+            <MoreVert />
+          </IconButton>
+          <Menu
+            anchorEl={anchorElComment}
+            open={Boolean(anchorElComment)}
+            onClose={handleMenuClose}
+            style={{ top: "50%", left: "50%" }}
+          >
+            <MenuItem onClick={handleReportClick}>
+              <Report fontSize="small" /> Báo cáo
+            </MenuItem>
+            {(comment.user.id === me.id || currentPost.user.id == me.id) && (
+              <MenuItem onClick={handleDeleteClick}>
+                <Delete fontSize="small" /> Xóa
+              </MenuItem>
+            )}
+          </Menu>
         </ListItem>
         <Collapse in={showReply} timeout="auto" unmountOnExit>
           <div style={{ paddingLeft: "3rem", paddingBottom: "1rem" }}>
@@ -193,7 +285,10 @@ const Post = ({ post, type, home }) => {
         </Collapse>
         {findCommentChildren(comment.id) &&
           findCommentChildren(comment.id).map((reply, index) => (
-            <ListItem key={index} style={{ paddingLeft: "4rem" }}>
+            <ListItem
+              key={index}
+              style={{ paddingLeft: "4rem", position: "relative" }}
+            >
               <ListItemAvatar>
                 <Avatar src={reply.user.avatarUrl} />
               </ListItemAvatar>
@@ -233,6 +328,27 @@ const Post = ({ post, type, home }) => {
                   checked={reply.likes.find((like) => like.user.id === me.id)}
                 />
               </IconButton>
+              <IconButton
+                aria-label="more options"
+                onClick={(e) => handleMenuReplyClick(e, reply)}
+              >
+                <MoreVert />
+              </IconButton>
+              <Menu
+                anchorEl={anchorElReply}
+                open={Boolean(anchorElReply)}
+                onClose={handleMenuClose}
+                style={{ top: "50%", left: "50%" }}
+              >
+                <MenuItem onClick={handleReportClick}>
+                  <Report fontSize="small" /> Báo cáo
+                </MenuItem>
+                {(reply.user.id === me.id || currentPost.user.id == me.id) && (
+                  <MenuItem onClick={handleDeleteClick}>
+                    <Delete fontSize="small" /> Xóa
+                  </MenuItem>
+                )}
+              </Menu>
             </ListItem>
           ))}
       </>
@@ -255,6 +371,9 @@ const Post = ({ post, type, home }) => {
     const submitComment = async () => {
       if (!newComment.trim()) return;
       const res = await commentPost(accessToken, postId, newComment);
+      if (res.EC != 200) {
+        toast.error(res.message);
+      }
       await reLoadPost();
       socket.emit("comment", `post_${currentPost.id}`);
       socket.emit("notification", `user_${currentPost.user.id}`);
@@ -470,7 +589,7 @@ const Post = ({ post, type, home }) => {
             color: "#fff",
           }}
         >
-          Close
+          Đóng
         </Button>
       </div>
     );
@@ -503,9 +622,27 @@ const Post = ({ post, type, home }) => {
             />
           }
           action={
-            <IconButton aria-label="settings">
-              <MoreVert />
-            </IconButton>
+            <>
+              <IconButton aria-label="settings" onClick={handleMenuPostClick}>
+                <MoreVert />
+              </IconButton>
+              <Menu
+                anchorEl={anchorElPost}
+                open={Boolean(anchorElPost)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem onClick={handleReportClick}>
+                  <Report fontSize="small" /> Báo cáo
+                </MenuItem>
+                {(currentPost.user.id === me.id ||
+                  (currentPost.type == "GROUP" &&
+                    me.id == currentPost.group.OwnerId)) && (
+                  <MenuItem onClick={handleDeleteClick}>
+                    <Delete fontSize="small" /> Xóa
+                  </MenuItem>
+                )}
+              </Menu>
+            </>
           }
           title={post.user.name}
           subheader={date.convertDateToTime(currentPost.createdAt)}
@@ -596,16 +733,13 @@ const Post = ({ post, type, home }) => {
               checked={isLiked}
             />
           </IconButton>
-          <IconButton aria-label="share">
-            <Share />
-          </IconButton>
           <IconButton onClick={toggleComments} aria-label="comment">
             <Badge badgeContent={currentPost.comments.length} color="primary">
               <Comment />
             </Badge>
           </IconButton>
         </CardActions>
-        {currentPost.likes.length + change > 0 && (
+        {currentPost.likes.length > 0 && (
           <Typography
             variant="body2"
             color="text.secondary"
@@ -637,6 +771,30 @@ const Post = ({ post, type, home }) => {
         )}
       </Card>
       {isModalLikeOpen && <LikePostModal likes={currentLikes} />}
+      <Dialog open={reportDialogOpen} onClose={handleReportDialogClose}>
+        <DialogTitle>Nội dung báo cáo</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="reportContent"
+            label="Nội dung báo cáo"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={reportContent}
+            onChange={(e) => setReportContent(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleReportDialogClose} color="primary">
+            Đóng
+          </Button>
+          <Button onClick={handleReportSubmit} color="primary">
+            Báo cáo
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

@@ -46,8 +46,8 @@ import Header from "../../component/Header/Header";
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
-    maxWidth: "1400px", // Set maxWidth to control the width of the content area
-    margin: "0 auto", // Center the content
+    maxWidth: "1400px", 
+    margin: "0 auto", 
   },
   nav: {
     width: "auto",
@@ -94,13 +94,13 @@ export default function Friend() {
   const user_id = useSelector((state) => state.user.id);
   const myId = useSelector((state) => state.user.id);
   const navigate = useNavigate();
-  const [friendList, setFriendList] = useState(friends); // Replace 'friends' with the actual data from the API
+  const [friendList, setFriendList] = useState(friends); 
   const [selectedIndex, setSelectedIndex] = useState(1);
   const PER_PAGE = 12;
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("name");
-  const [filter, setFilter] = useState("sameClass"); // Add filter state
+  const [filter, setFilter] = useState("sameClass"); 
   const [open, setOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [countFriend, setCountFriend] = useState(0);
@@ -180,8 +180,7 @@ export default function Friend() {
 
   const handleConfirmDelete = async () => {
     if (selectedFriend) {
-      // Logic để xóa bạn
-      const res = await rejectFriendRequest(accessToken, selectedFriend.id); // Hoặc hàm xóa bạn của bạn
+      const res = await rejectFriendRequest(accessToken, selectedFriend.id); 
       if (res?.EC === 200) {
         toast.success("Xóa bạn thành công");
         const newFriendList = friendList.filter(

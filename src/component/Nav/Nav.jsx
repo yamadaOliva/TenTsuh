@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
 const Nav = ({ mode, setMode }) => {
+  const me = useSelector((state) => state.user);
   const navigate = useNavigate();
   const id = useSelector((state) => state.user.id);
   return (
@@ -101,16 +102,21 @@ const Nav = ({ mode, setMode }) => {
               <ListItemText primary="Tường nhà" />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton component="a">
-              <ListItemIcon>
-                <ModeNight />
-              </ListItemIcon>
-              <Switch
-                onChange={() => setMode(mode === "light" ? "dark" : "light")}
-              />
-            </ListItemButton>
-          </ListItem>
+          {me.role === "ADMIN" && (
+            <ListItem disablePadding>
+              <ListItemButton
+                component="a"
+                onClick={() => {
+                  navigate("/admin");
+                }}
+              >
+                <ListItemIcon>
+                  <Article />
+                </ListItemIcon>
+                <ListItemText primary="Quản trị" />
+              </ListItemButton>
+            </ListItem>
+          )}
         </List>
       </Box>
     </Box>

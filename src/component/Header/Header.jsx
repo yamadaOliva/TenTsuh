@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { People } from "@material-ui/icons";
 import { socket } from "../../socket";
 import { getFriendsRequest } from "../../service/friend.service";
-import { useSelector , useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { logoutBE } from "../../service/auth.service";
 import { getUnseenChat } from "../../service/chat.service";
 import {
@@ -35,6 +35,7 @@ import {
 } from "../../service/notification.service";
 import FriendRequestUnit from "./FriendRequestUnit";
 import { toast } from "react-toastify";
+
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -121,7 +122,7 @@ export default function Header() {
     navigate("/change-password");
     handleClose();
   };
-  
+
   const handleLogoutClick = async () => {
     handleClose();
     dispatch(logout());
@@ -322,8 +323,7 @@ export default function Header() {
             color="inherit"
             onClick={() => {
               navigate("/message");
-            }
-            }
+            }}
           >
             <Badge badgeContent={unseenChat.length} color="error">
               <MailIcon />
@@ -363,9 +363,7 @@ export default function Header() {
               <MenuItem onClick={handleProfileClick}>
                 Thông tin cá nhân
               </MenuItem>
-              <MenuItem onClick={handleChangePassword}>
-              Đổi mật khẩu
-              </MenuItem>
+              <MenuItem onClick={handleChangePassword}>Đổi mật khẩu</MenuItem>
               <MenuItem onClick={handleLogoutClick}>Đăng xuất</MenuItem>
             </Menu>
           </>
