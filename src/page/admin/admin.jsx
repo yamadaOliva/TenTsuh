@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -19,15 +19,15 @@ import {
   Modal,
 } from "@mui/material";
 import { Search, Delete, Block, Visibility } from "@mui/icons-material";
-
-const fakeStudents = Array.from({ length: 50 }, (v, i) => ({
-  id: i + 1,
-  avatarUrl: "https://via.placeholder.com/150",
-  name: `Student ${i + 1}`,
-  class: `Class ${Math.floor(i / 10) + 1}`,
-  studentId: `ID${i + 1}`,
-  isBanned: false, 
-}));
+import {
+  getListUser,
+  banUser,
+  unbanUser,
+  searchUser,
+} from "../../service/user.service";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { socket } from "../../socket";
 
 const fakeReports = Array.from({ length: 30 }, (v, i) => ({
   id: i + 1,
@@ -75,12 +75,12 @@ const ModalBox = styled(Box)({
   p: 4,
   textAlign: "center",
   backgroundColor: "#fff",
-
   padding: 20,
 });
 
 const AdminScreen = () => {
-  const [students, setStudents] = useState(fakeStudents);
+  const me = useSelector((state) => state.user);
+  const [students, setStudents] = useState([]);
   const [reports, setReports] = useState(fakeReports);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentReportPage, setCurrentReportPage] = useState(1);
@@ -89,30 +89,68 @@ const AdminScreen = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = () => {
-    const filteredStudents = fakeStudents.filter((student) =>
-      student[searchField].toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setStudents(filteredStudents);
+  const handleSearch = async () => {
+    if (searchField === "all" || searchQuery.trim() === "") {
+      fetchUsers(1); // Fetch all users if search query is empty or searchField is "all"
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    setCurrentPage(1);
+    try {
+      const res = await searchUser(
+        me.accessToken,
+        searchQuery,
+        searchField,
+        1,
+        studentsPerPage
+      );
+      if (res.EC !== 200) {
+        toast.error("Không thể tìm kiếm user");
+        return;
+      }
+      setStudents(res.data.data);
+      setTotal(res.data.total);
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi khi tìm kiếm");
+    }
   };
 
-  const handleBanUser = (studentId) => {
+  const handleBanUser = async (studentId) => {
+    const res = await banUser(me.accessToken, studentId);
+    if (res.EC !== 200) {
+      toast.error("Không thể ban user");
+      return;
+    }
+    toast.success("Ban user thành công");
+    socket.emit("banUser", `user_${studentId}`);
     setStudents((prevStudents) =>
       prevStudents.map((student) =>
-        student.id === studentId ? { ...student, isBanned: true } : student
+        student.id === studentId
+          ? { ...student, statusAccount: "BLOCKED" }
+          : student
       )
     );
-    console.log(`Banned user with ID: ${studentId}`);
   };
 
-  const handleUnbanUser = (studentId) => {
+  const handleUnbanUser = async (studentId) => {
+    const res = await unbanUser(me.accessToken, studentId);
+    if (res.EC !== 200) {
+      toast.error("Không thể unban user");
+      return;
+    }
+    toast.success("Unban user thành công");
     setStudents((prevStudents) =>
       prevStudents.map((student) =>
-        student.id === studentId ? { ...student, isBanned: false } : student
+        student.id === studentId
+          ? { ...student, statusAccount: "ACTIVE" }
+          : student
       )
     );
-    console.log(`Unbanned user with ID: ${studentId}`);
   };
 
   const handleDeletePost = () => {
@@ -140,13 +178,8 @@ const AdminScreen = () => {
 
   const studentsPerPage = 10;
   const reportsPerPage = 10;
-  const totalStudentPages = Math.ceil(students.length / studentsPerPage);
+  const totalStudentPages = Math.ceil(total / studentsPerPage);
   const totalReportPages = Math.ceil(reports.length / reportsPerPage);
-
-  const displayedStudents = students.slice(
-    (currentPage - 1) * studentsPerPage,
-    currentPage * studentsPerPage
-  );
 
   const displayedReports = reports.slice(
     (currentReportPage - 1) * reportsPerPage,
@@ -156,6 +189,32 @@ const AdminScreen = () => {
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
   };
+
+  const fetchUsers = async (page) => {
+    try {
+      if (isSearching && searchField !== "all") {
+        const res = await searchUser(
+          me.accessToken,
+          searchQuery,
+          searchField,
+          page,
+          studentsPerPage
+        );
+        setStudents(res.data.data);
+        setTotal(res.data.total);
+      } else {
+        const res = await getListUser(me.accessToken, page, studentsPerPage);
+        setStudents(res.data.data);
+        setTotal(res.data.total);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers(currentPage);
+  }, [currentPage]);
 
   return (
     <BackgroundContainer>
@@ -186,17 +245,17 @@ const AdminScreen = () => {
                 label="Tìm kiếm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                fullWidth
+                style={{ flex: 1 }}
               />
               <Select
                 variant="outlined"
                 label="Lĩnh vực"
                 value={searchField}
                 onChange={(e) => setSearchField(e.target.value)}
-                fullWidth
+                style={{ width: 150 }}
               >
                 <MenuItem value="name">Tên</MenuItem>
-                <MenuItem value="class">Lớp</MenuItem>
+                <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="studentId">Mã SV</MenuItem>
               </Select>
               <Button
@@ -208,44 +267,45 @@ const AdminScreen = () => {
                 Tìm kiếm
               </Button>
             </Box>
-            {displayedStudents.map((student) => (
-              <CustomCard key={student.id}>
-                <Grid container alignItems="center" spacing={2}>
-                  <Grid item>
-                    <Avatar src={student.avatarUrl} />
+            {students &&
+              students.map((student) => (
+                <CustomCard key={student.id}>
+                  <Grid container alignItems="center" spacing={2}>
+                    <Grid item>
+                      <Avatar src={student.avatarUrl} />
+                    </Grid>
+                    <Grid item xs>
+                      <Typography variant="body1">{student.name}</Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {student.class}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {student.studentId}
+                      </Typography>
+                    </Grid>
+                    <Grid item>
+                      {student?.statusAccount === "BLOCKED" ? (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleUnbanUser(student.id)}
+                        >
+                          Unban
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          startIcon={<Block />}
+                          onClick={() => handleBanUser(student.id)}
+                        >
+                          Ban
+                        </Button>
+                      )}
+                    </Grid>
                   </Grid>
-                  <Grid item xs>
-                    <Typography variant="body1">{student.name}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {student.class}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {student.studentId}
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    {student.isBanned ? (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleUnbanUser(student.id)}
-                      >
-                        Unban
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        startIcon={<Block />}
-                        onClick={() => handleBanUser(student.id)}
-                      >
-                        Ban
-                      </Button>
-                    )}
-                  </Grid>
-                </Grid>
-              </CustomCard>
-            ))}
+                </CustomCard>
+              ))}
             <Pagination
               count={totalStudentPages}
               page={currentPage}

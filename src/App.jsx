@@ -10,6 +10,7 @@ import { refreshToken } from "./service/auth.service";
 import { getMe } from "./service/user.service";
 import MiniChat from "./component/BoxChat/BoxChat";
 import PostModal from "./component/Feed/PostModal";
+import { socket } from "./socket";
 import {
   setAccessToken,
   setRefreshToken,

@@ -174,6 +174,12 @@ export default function Header() {
         console.log("notification", data);
         await fetchNotifications();
       });
+
+      socket.on("banned", () => {
+        dispatch(logout());
+        navigate("/login");
+        toast.error("Tài khoản của bạn đã bị khóa");
+      });
     }
   }, []);
 

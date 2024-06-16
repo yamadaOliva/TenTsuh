@@ -4,7 +4,6 @@ import {
   Favorite,
   FavoriteBorder,
   MoreVert,
-  Share,
   Comment,
   Report,
   Delete,
@@ -46,6 +45,7 @@ import {
   unlikePost,
   deleteComment,
   deletePost,
+  createReport,
 } from "../../service/post.service";
 import { toast } from "react-toastify";
 import { socket } from "../../socket";
@@ -92,24 +92,23 @@ const Post = ({ post, type, home, deletePostEvent }) => {
 
   const handleMenuPostClick = (event) => {
     setAnchorElPost(event.currentTarget);
-    setSelectedItem(currentPost);
+    setSelectedItem({ ...currentPost, type: "post" });
   };
 
   const handleMenuCommentClick = (event, comment) => {
-    setAnchorElComment(event.currentTarget);
-    setSelectedItem(comment);
+    setAnchorElComment({ anchor: event.currentTarget, id: comment.id });
+    setSelectedItem({ ...comment, type: "comment" });
   };
 
   const handleMenuReplyClick = (event, reply) => {
-    setAnchorElReply(event.currentTarget);
-    setSelectedItem(reply);
+    setAnchorElReply({ anchor: event.currentTarget, id: reply.id });
+    setSelectedItem({ ...reply, type: "comment" });
   };
 
   const handleMenuClose = () => {
     setAnchorElPost(null);
     setAnchorElComment(null);
     setAnchorElReply(null);
-    setSelectedItem(null);
   };
 
   const handleReportClick = () => {
@@ -122,48 +121,67 @@ const Post = ({ post, type, home, deletePostEvent }) => {
     setReportContent("");
   };
 
-  const handleReportSubmit = () => {
-    console.log("Reported content:", reportContent);
-    toast.success("Report submitted successfully");
+  const handleReportSubmit = async () => {
+    let res;
+    if (selectedItem.type === "post") {
+      const reportData = {
+        postId: currentPost.id,
+        type: "POST",
+        reportedId: currentPost.user.id,
+        content: reportContent,
+      };
+      res = await createReport(me.accessToken, reportData);
+    } else if (selectedItem.type  === "comment") {
+      const reportData = {
+        postId: currentPost.id,
+        commentId: selectedItem.id,
+        type: "COMMENT",
+        reportedId: selectedItem.user.id,
+        content: reportContent,
+      };
+      res = await createReport(me.accessToken, reportData);
+    }
+    if (res.EC !== 200) {
+      toast.error(res.message);
+      return;
+    } else toast.success("Báo cáo thành công");
     handleReportDialogClose();
+  };
+
+  const handleDeleteCommentClick = async (id) => {
+    const res = await deleteComment(me.accessToken, id);
+    if (res.EC !== 200) {
+      toast.error(res.message);
+    } else {
+      toast.success("Xóa bình luận thành công");
+      reLoadPost();
+    }
+    handleMenuClose();
   };
 
   const handleDeleteClick = async () => {
     const res = await deletePost(me.accessToken, currentPost.id);
-    if (res.EC != 200) {
+    if (res.EC !== 200) {
       toast.error(res.message);
     } else {
       deletePostEvent(currentPost.id);
       toast.success("Deleted successfully");
     }
-
     handleMenuClose();
   };
 
   const likeCommentHandler = async (comment) => {
-    console.log(comment);
     const commentId = comment.id;
-    let check;
-    if (comment.likes.length === 0) {
-      check = false;
-    } else {
-      check = comment.likes.find((like) => {
-        console.log(like.user.id);
-        return like.user.id === me.id;
-      });
-    }
-    console.log(check);
+    const check = comment.likes.some((like) => like.user.id === me.id);
+
     if (check) {
       await unlikeComment(me.accessToken, commentId);
-      await reLoadPost();
-      socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${comment.user.id}`);
     } else {
       await likeComment(me.accessToken, commentId);
-      await reLoadPost();
-      socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${comment.user.id}`);
     }
+    await reLoadPost();
+    socket.emit("comment", `post_${currentPost.id}`);
+    socket.emit("notification", `user_${comment.user.id}`);
   };
 
   const findCommentChildren = (commentId) => {
@@ -182,7 +200,7 @@ const Post = ({ post, type, home, deletePostEvent }) => {
 
     const submitReply = async () => {
       const res = await replyComment(me.accessToken, comment.id, replyText);
-      if (res.EC != 200) {
+      if (res.EC !== 200) {
         toast.error(res.message);
       }
       await reLoadPost();
@@ -196,10 +214,7 @@ const Post = ({ post, type, home, deletePostEvent }) => {
       <>
         <ListItem
           alignItems="flex-start"
-          style={{
-            display: "flex",
-            alignItems: "center",
-          }}
+          style={{ display: "flex", alignItems: "center" }}
         >
           <ListItemAvatar>
             <Avatar src={comment.user.avatarUrl} />
@@ -224,7 +239,6 @@ const Post = ({ post, type, home, deletePostEvent }) => {
             }}
             onClick={() => {
               setCurrentLikes(comment.likes);
-              console.log(comment.likes);
               setIsModalLikeOpen(true);
             }}
           >
@@ -238,7 +252,7 @@ const Post = ({ post, type, home, deletePostEvent }) => {
             <Checkbox
               icon={<FavoriteBorder />}
               checkedIcon={<Favorite sx={{ color: "red" }} />}
-              checked={comment.likes.find((like) => like.user.id === me.id)}
+              checked={comment.likes.some((like) => like.user.id === me.id)}
             />
           </IconButton>
           <IconButton
@@ -254,16 +268,21 @@ const Post = ({ post, type, home, deletePostEvent }) => {
             <MoreVert />
           </IconButton>
           <Menu
-            anchorEl={anchorElComment}
-            open={Boolean(anchorElComment)}
+            anchorEl={
+              anchorElComment?.id === comment.id ? anchorElComment.anchor : null
+            }
+            open={Boolean(anchorElComment?.id === comment.id)}
             onClose={handleMenuClose}
             style={{ top: "50%", left: "50%" }}
           >
             <MenuItem onClick={handleReportClick}>
               <Report fontSize="small" /> Báo cáo
             </MenuItem>
-            {(comment.user.id === me.id || currentPost.user.id == me.id) && (
-              <MenuItem onClick={handleDeleteClick}>
+            {(comment.user.id === me.id ||
+              currentPost.user.id === me.id ||
+              (currentPost.type === "GROUP" &&
+                me.id === currentPost.group.OwnerId)) && (
+              <MenuItem onClick={() => handleDeleteCommentClick(comment.id)}>
                 <Delete fontSize="small" /> Xóa
               </MenuItem>
             )}
@@ -283,74 +302,78 @@ const Post = ({ post, type, home, deletePostEvent }) => {
             </Button>
           </div>
         </Collapse>
-        {findCommentChildren(comment.id) &&
-          findCommentChildren(comment.id).map((reply, index) => (
-            <ListItem
-              key={index}
-              style={{ paddingLeft: "4rem", position: "relative" }}
+        {findCommentChildren(comment.id).map((reply, index) => (
+          <ListItem
+            key={index}
+            style={{ paddingLeft: "4rem", position: "relative" }}
+          >
+            <ListItemAvatar>
+              <Avatar src={reply.user.avatarUrl} />
+            </ListItemAvatar>
+            <ListItemText
+              primary={reply.content}
+              secondary={
+                reply.user.name +
+                " - " +
+                date.convertDateToTime(reply.createdAt)
+              }
+            />
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              style={{
+                fontSize: "1rem",
+                fontWeight: "600",
+                color: "#000000",
+                cursor: "pointer",
+                position: "relative",
+              }}
+              onClick={() => {
+                setCurrentLikes(reply.likes);
+                setIsModalLikeOpen(true);
+              }}
             >
-              <ListItemAvatar>
-                <Avatar src={reply.user.avatarUrl} />
-              </ListItemAvatar>
-              <ListItemText
-                primary={reply.content}
-                secondary={
-                  reply.user.name +
-                  " - " +
-                  date.convertDateToTime(reply.createdAt)
-                }
-              />
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                style={{
-                  fontSize: "1rem",
-                  fontWeight: "600",
-                  color: "#000000",
-                  cursor: "pointer",
-                  position: "relative",
-                }}
-                onClick={() => {
-                  setCurrentLikes(reply.likes);
-                  setIsModalLikeOpen(true);
-                }}
-              >
-                {reply.likes.length > 0 ? reply.likes.length : ""}
-              </Typography>
+              {reply.likes.length > 0 ? reply.likes.length : ""}
+            </Typography>
 
-              <IconButton
-                aria-label="like reply"
-                onClick={() => likeCommentHandler(reply)}
-              >
-                <Checkbox
-                  icon={<FavoriteBorder />}
-                  checkedIcon={<Favorite sx={{ color: "red" }} />}
-                  checked={reply.likes.find((like) => like.user.id === me.id)}
-                />
-              </IconButton>
-              <IconButton
-                aria-label="more options"
-                onClick={(e) => handleMenuReplyClick(e, reply)}
-              >
-                <MoreVert />
-              </IconButton>
-              <Menu
-                anchorEl={anchorElReply}
-                open={Boolean(anchorElReply)}
-                onClose={handleMenuClose}
-                style={{ top: "50%", left: "50%" }}
-              >
-                <MenuItem onClick={handleReportClick}>
-                  <Report fontSize="small" /> Báo cáo
+            <IconButton
+              aria-label="like reply"
+              onClick={() => likeCommentHandler(reply)}
+            >
+              <Checkbox
+                icon={<FavoriteBorder />}
+                checkedIcon={<Favorite sx={{ color: "red" }} />}
+                checked={reply.likes.some((like) => like.user.id === me.id)}
+              />
+            </IconButton>
+            <IconButton
+              aria-label="more options"
+              onClick={(e) => handleMenuReplyClick(e, reply)}
+            >
+              <MoreVert />
+            </IconButton>
+            <Menu
+              anchorEl={
+                anchorElReply?.id === reply.id ? anchorElReply.anchor : null
+              }
+              open={Boolean(anchorElReply?.id === reply.id)}
+              onClose={handleMenuClose}
+              style={{ top: "50%", left: "50%" }}
+            >
+              <MenuItem onClick={handleReportClick}>
+                <Report fontSize="small" /> Báo cáo
+              </MenuItem>
+              {(reply.user.id === me.id ||
+                currentPost.user.id === me.id ||
+                (currentPost.type === "GROUP" &&
+                  me.id === currentPost.group.OwnerId)) && (
+                <MenuItem onClick={() => handleDeleteCommentClick(reply.id)}>
+                  <Delete fontSize="small" /> Xóa
                 </MenuItem>
-                {(reply.user.id === me.id || currentPost.user.id == me.id) && (
-                  <MenuItem onClick={handleDeleteClick}>
-                    <Delete fontSize="small" /> Xóa
-                  </MenuItem>
-                )}
-              </Menu>
-            </ListItem>
-          ))}
+              )}
+            </Menu>
+          </ListItem>
+        ))}
       </>
     );
   };
@@ -371,7 +394,7 @@ const Post = ({ post, type, home, deletePostEvent }) => {
     const submitComment = async () => {
       if (!newComment.trim()) return;
       const res = await commentPost(accessToken, postId, newComment);
-      if (res.EC != 200) {
+      if (res.EC !== 200) {
         toast.error(res.message);
       }
       await reLoadPost();
@@ -493,11 +516,10 @@ const Post = ({ post, type, home, deletePostEvent }) => {
     });
     setComments(updatedComments);
   };
+
   const reLoadPost = async () => {
-    console.log("Reloading post with ID:", currentPost.id);
     try {
       const res = await getPostById(me.accessToken, currentPost.id);
-      console.log("API response:", res.data);
       setCurrentPost(res.data);
     } catch (error) {
       console.error("Failed to reload post:", error);
@@ -505,22 +527,16 @@ const Post = ({ post, type, home, deletePostEvent }) => {
   };
 
   const handleLikePost = async () => {
-    console.log(post.id);
     if (isLiked) {
       await unlikePost(currentPost.id, me.accessToken);
-      const res = await getPostById(me.accessToken, currentPost.id);
-      setCurrentPost(res.data);
-      setIsLiked(false);
-      socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${currentPost.user.id}`);
     } else {
       await likePost(currentPost.id, me.accessToken);
-      const res = await getPostById(me.accessToken, currentPost.id);
-      setCurrentPost(res.data);
-      setIsLiked(true);
-      socket.emit("comment", `post_${currentPost.id}`);
-      socket.emit("notification", `user_${currentPost.user.id}`);
     }
+    const res = await getPostById(me.accessToken, currentPost.id);
+    setCurrentPost(res.data);
+    setIsLiked(!isLiked);
+    socket.emit("comment", `post_${currentPost.id}`);
+    socket.emit("notification", `user_${currentPost.user.id}`);
   };
 
   useEffect(() => {
@@ -530,11 +546,8 @@ const Post = ({ post, type, home, deletePostEvent }) => {
       }
     });
     socket.emit("joinPost", `post_${post.id}`);
-    socket.on("comment", (data) => {
-      console.log(data);
-      reLoadPost();
-    });
-  }, []);
+    socket.on("comment", () => reLoadPost());
+  }, [currentPost.likes, me.id, post.id]);
 
   const LikePostModal = ({ likes }) => {
     return (
@@ -568,7 +581,7 @@ const Post = ({ post, type, home, deletePostEvent }) => {
             color: "#000000",
           }}
         >
-          {likes.length} lượt thích {}
+          {likes.length} lượt thích
         </Typography>
         <List>
           {likes.map((like) => (
@@ -594,6 +607,7 @@ const Post = ({ post, type, home, deletePostEvent }) => {
       </div>
     );
   };
+
   return (
     <>
       <Card
@@ -635,8 +649,8 @@ const Post = ({ post, type, home, deletePostEvent }) => {
                   <Report fontSize="small" /> Báo cáo
                 </MenuItem>
                 {(currentPost.user.id === me.id ||
-                  (currentPost.type == "GROUP" &&
-                    me.id == currentPost.group.OwnerId)) && (
+                  (currentPost.type === "GROUP" &&
+                    me.id === currentPost.group.OwnerId)) && (
                   <MenuItem onClick={handleDeleteClick}>
                     <Delete fontSize="small" /> Xóa
                   </MenuItem>

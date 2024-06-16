@@ -73,6 +73,10 @@ const deleteComment = (access_token, commentId) => {
   return axios.delete(`/post/comment/delete/${commentId}`);
 };
 
+const createReport = (access_token, data) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.post(`/report/create`, data);
+};
 export {
   createPost,
   getPotsOfUser,
@@ -89,4 +93,5 @@ export {
   getPostFollowing,
   deletePost,
   deleteComment,
+  createReport,
 };
