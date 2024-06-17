@@ -187,8 +187,18 @@ const AdminScreen = () => {
     socket.emit("notification", `user_${selectedReport.userReported.id}`);
   };
 
-  const handleBanAccount = (reportId) => {
-    console.log(`Banned account with Report ID: ${reportId}`);
+  const handleBanAccount = async (report) => {
+    const res = await banUser(me.accessToken, report.userReported.id);
+    if (res.EC !== 200) {
+      toast.error("Không thể ban user");
+      return;
+    }
+    toast.success("Ban user thành công");
+    socket.emit("banUser", `user_${report.userReported.id}`);
+    setReports((prevReports) =>
+      prevReports.filter((prevReport) => prevReport.id !== report.id)
+    );
+    await deleteReport(me.accessToken, report.id);
   };
 
   const handleViewPost = (postId) => {
