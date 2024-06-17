@@ -19,23 +19,22 @@ import {
   Modal,
 } from "@mui/material";
 import { Search, Delete, Block, Visibility } from "@mui/icons-material";
+import Header from "../../component/Header/Header";
 import {
   getListUser,
   banUser,
   unbanUser,
   searchUser,
 } from "../../service/user.service";
-import { useSelector } from "react-redux";
+import {
+  deletePostByAdmin,
+  deleteCommentByAdmin,
+} from "../../service/post.service";
+import { getReports, deleteReport } from "../../service/report.service";
+import { useSelector, useDispatch } from "react-redux";
+import { openPost } from "../../redux/Slice/chat-slice";
 import { toast } from "react-toastify";
 import { socket } from "../../socket";
-
-const fakeReports = Array.from({ length: 30 }, (v, i) => ({
-  id: i + 1,
-  reporterName: `Reporter ${i + 1}`,
-  reportedName: `Reported ${i + 1}`,
-  postId: i + 1,
-  content: `Report content for post ${i + 1}`,
-}));
 
 const CustomCard = styled(Paper)({
   padding: 16,
@@ -79,9 +78,10 @@ const ModalBox = styled(Box)({
 });
 
 const AdminScreen = () => {
+  const dispatch = useDispatch();
   const me = useSelector((state) => state.user);
   const [students, setStudents] = useState([]);
-  const [reports, setReports] = useState(fakeReports);
+  const [reports, setReports] = useState();
   const [currentPage, setCurrentPage] = useState(1);
   const [currentReportPage, setCurrentReportPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,15 +90,15 @@ const AdminScreen = () => {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [total, setTotal] = useState(0);
+  const [totalReports, setTotalReports] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async () => {
     if (searchField === "all" || searchQuery.trim() === "") {
-      fetchUsers(1); // Fetch all users if search query is empty or searchField is "all"
+      fetchUsers(1);
       setIsSearching(false);
       return;
     }
-
     setIsSearching(true);
     setCurrentPage(1);
     try {
@@ -153,12 +153,38 @@ const AdminScreen = () => {
     );
   };
 
-  const handleDeletePost = () => {
-    console.log(`Deleted post with Report ID: ${selectedReport}`);
-    setReports((prevReports) =>
-      prevReports.filter((report) => report.id !== selectedReport)
-    );
-    setOpenDeleteModal(false);
+  const handleDeletePost = async () => {
+    if (selectedReport.type === "POST") {
+      const res = await deletePostByAdmin(
+        me.accessToken,
+        selectedReport.postId
+      );
+      if (res.EC !== 200) {
+        toast.error("Không thể xóa bài viết");
+        return;
+      }
+      toast.success("Xóa bài viết thành công");
+      setOpenDeleteModal(false);
+      setReports((prevReports) =>
+        prevReports.filter((report) => report.id !== selectedReport.id)
+      );
+    } else {
+      const res = await deleteCommentByAdmin(
+        me.accessToken,
+        selectedReport.comment.id
+      );
+      if (res.EC !== 200) {
+        toast.error("Không thể xóa bình luận");
+        return;
+      }
+      toast.success("Xóa bình luận thành công");
+      await deleteReport(me.accessToken, selectedReport.id);
+      setOpenDeleteModal(false);
+      setReports((prevReports) =>
+        prevReports.filter((report) => report.id !== selectedReport.id)
+      );
+    }
+    socket.emit("notification", `user_${selectedReport.userReported.id}`);
   };
 
   const handleBanAccount = (reportId) => {
@@ -166,25 +192,25 @@ const AdminScreen = () => {
   };
 
   const handleViewPost = (postId) => {
-    console.log(`Viewing post with ID: ${postId}`);
+    dispatch(openPost(postId));
   };
 
-  const handleIgnoreReport = (reportId) => {
+  const handleIgnoreReport = async (reportId) => {
+    const res = await deleteReport(me.accessToken, reportId);
+    if (res.EC !== 200) {
+      toast.error("Không thể bỏ qua báo cáo");
+      return;
+    }
+    toast.success("Bỏ qua báo cáo thành công");
     setReports((prevReports) =>
       prevReports.filter((report) => report.id !== reportId)
     );
-    console.log(`Ignored report with ID: ${reportId}`);
   };
 
   const studentsPerPage = 10;
   const reportsPerPage = 10;
   const totalStudentPages = Math.ceil(total / studentsPerPage);
-  const totalReportPages = Math.ceil(reports.length / reportsPerPage);
-
-  const displayedReports = reports.slice(
-    (currentReportPage - 1) * reportsPerPage,
-    currentReportPage * reportsPerPage
-  );
+  const totalReportPages = Math.ceil(totalReports / reportsPerPage);
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
@@ -212,204 +238,234 @@ const AdminScreen = () => {
     }
   };
 
+  const fetchReports = async (page) => {
+    try {
+      const res = await getReports(me.accessToken, page, reportsPerPage);
+      setReports(res.data.reports);
+      console.log(res.data.reports);
+      setTotalReports(res.data.total);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers(currentPage);
   }, [currentPage]);
 
-  return (
-    <BackgroundContainer>
-      <ContentContainer>
-        <Typography variant="h4" gutterBottom>
-          Admin Dashboard
-        </Typography>
-        <Tabs
-          value={currentTab}
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          centered
-        >
-          <Tab label="Danh sách sinh viên" />
-          <Tab label="Danh sách báo cáo" />
-        </Tabs>
-        <Divider style={{ marginBottom: 20 }} />
+  useEffect(() => {
+    fetchReports(currentReportPage);
+  }, [currentReportPage]);
 
-        {currentTab === 0 && (
-          <Box mb={4}>
-            <Typography variant="h5" gutterBottom>
-              Danh sách sinh viên
-            </Typography>
-            <Box mb={2} display="flex" gap={2}>
-              <TextField
-                variant="outlined"
-                label="Tìm kiếm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <Select
-                variant="outlined"
-                label="Lĩnh vực"
-                value={searchField}
-                onChange={(e) => setSearchField(e.target.value)}
-                style={{ width: 150 }}
-              >
-                <MenuItem value="name">Tên</MenuItem>
-                <MenuItem value="all">Tất cả</MenuItem>
-                <MenuItem value="studentId">Mã SV</MenuItem>
-              </Select>
-              <Button
-                variant="contained"
+  return (
+    <>
+      <Header />
+      <BackgroundContainer>
+        <ContentContainer>
+          <Typography variant="h4" gutterBottom>
+            Admin Dashboard
+          </Typography>
+          <Tabs
+            value={currentTab}
+            onChange={handleTabChange}
+            indicatorColor="primary"
+            textColor="primary"
+            centered
+          >
+            <Tab label="Danh sách sinh viên" />
+            <Tab label="Danh sách báo cáo" />
+          </Tabs>
+          <Divider style={{ marginBottom: 20 }} />
+
+          {currentTab === 0 && (
+            <Box mb={4}>
+              <Typography variant="h5" gutterBottom>
+                Danh sách sinh viên
+              </Typography>
+              <Box mb={2} display="flex" gap={2}>
+                <TextField
+                  variant="outlined"
+                  label="Tìm kiếm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <Select
+                  variant="outlined"
+                  label="Lĩnh vực"
+                  value={searchField}
+                  onChange={(e) => setSearchField(e.target.value)}
+                  style={{ width: 150 }}
+                >
+                  <MenuItem value="name">Tên</MenuItem>
+                  <MenuItem value="all">Tất cả</MenuItem>
+                  <MenuItem value="studentId">Mã SV</MenuItem>
+                </Select>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<Search />}
+                  onClick={handleSearch}
+                >
+                  Tìm kiếm
+                </Button>
+              </Box>
+              {students &&
+                students.map((student) => (
+                  <CustomCard key={student.id}>
+                    <Grid container alignItems="center" spacing={2}>
+                      <Grid item>
+                        <Avatar src={student.avatarUrl} />
+                      </Grid>
+                      <Grid item xs>
+                        <Typography variant="body1">{student.name}</Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {student.class}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {student.studentId}
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        {student?.statusAccount === "BLOCKED" ? (
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleUnbanUser(student.id)}
+                          >
+                            Unban
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            startIcon={<Block />}
+                            onClick={() => handleBanUser(student.id)}
+                          >
+                            Ban
+                          </Button>
+                        )}
+                      </Grid>
+                    </Grid>
+                  </CustomCard>
+                ))}
+              <Pagination
+                count={totalStudentPages}
+                page={currentPage}
+                onChange={(e, value) => setCurrentPage(value)}
                 color="primary"
-                startIcon={<Search />}
-                onClick={handleSearch}
-              >
-                Tìm kiếm
-              </Button>
+              />
             </Box>
-            {students &&
-              students.map((student) => (
-                <CustomCard key={student.id}>
-                  <Grid container alignItems="center" spacing={2}>
-                    <Grid item>
-                      <Avatar src={student.avatarUrl} />
-                    </Grid>
-                    <Grid item xs>
-                      <Typography variant="body1">{student.name}</Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {student.class}
+          )}
+
+          {currentTab === 1 && (
+            <Box>
+              <Typography variant="h5" gutterBottom>
+                Danh sách báo cáo
+              </Typography>
+              {reports &&
+                reports.map((report) => (
+                  <CustomCard key={report.id}>
+                    <Typography variant="body1">
+                      Loại báo cáo: {report.type}
+                    </Typography>
+                    <Typography variant="body1">
+                      Người báo cáo: {report.user.name}
+                    </Typography>
+                    <Typography variant="body1">
+                      Người bị báo cáo: {report.userReported.name}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Nội dung báo cáo: {report.content}
+                    </Typography>
+                    {report.type === "COMMENT" && (
+                      <Typography variant="body2" color="red">
+                        Bình luận: {report?.comment.content}
                       </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {student.studentId}
-                      </Typography>
-                    </Grid>
-                    <Grid item>
-                      {student?.statusAccount === "BLOCKED" ? (
+                    )}
+                    <Box display="flex" gap={2} mt={2}>
+                      {report.type == "POST" && (
                         <Button
                           variant="contained"
                           color="primary"
-                          onClick={() => handleUnbanUser(student.id)}
+                          startIcon={<Visibility />}
+                          onClick={() => handleViewPost(report.postId)}
                         >
-                          Unban
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          startIcon={<Block />}
-                          onClick={() => handleBanUser(student.id)}
-                        >
-                          Ban
+                          Xem bài viết
                         </Button>
                       )}
-                    </Grid>
-                  </Grid>
-                </CustomCard>
-              ))}
-            <Pagination
-              count={totalStudentPages}
-              page={currentPage}
-              onChange={(e, value) => setCurrentPage(value)}
-              color="primary"
-            />
-          </Box>
-        )}
 
-        {currentTab === 1 && (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              Danh sách báo cáo
-            </Typography>
-            {displayedReports.map((report) => (
-              <CustomCard key={report.id}>
-                <Typography variant="body1">
-                  Người báo cáo: {report.reporterName}
-                </Typography>
-                <Typography variant="body1">
-                  Người bị báo cáo: {report.reportedName}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Nội dung báo cáo: {report.content}
-                </Typography>
-                <Box display="flex" gap={2} mt={2}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<Visibility />}
-                    onClick={() => handleViewPost(report.postId)}
-                  >
-                    Xem bài viết
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<Delete />}
-                    onClick={() => {
-                      setSelectedReport(report.id);
-                      setOpenDeleteModal(true);
-                    }}
-                  >
-                    Xóa bài viết
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<Block />}
-                    onClick={() => handleBanAccount(report.id)}
-                  >
-                    Ban Account
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={() => handleIgnoreReport(report.id)}
-                  >
-                    Bỏ qua
-                  </Button>
-                </Box>
-              </CustomCard>
-            ))}
-            <Pagination
-              count={totalReportPages}
-              page={currentReportPage}
-              onChange={(e, value) => setCurrentReportPage(value)}
-              color="primary"
-            />
-          </Box>
-        )}
-
-        <Modal
-          open={openDeleteModal}
-          onClose={() => setOpenDeleteModal(false)}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <ModalBox>
-            <Typography variant="h6" color="gray" textAlign="center">
-              Xác nhận xóa bài viết
-            </Typography>
-            <Typography variant="body1" mt={2} mb={2}>
-              Bạn có chắc chắn muốn xóa bài viết này không?
-            </Typography>
-            <Box display="flex" justifyContent="space-around">
-              <Button
-                variant="contained"
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        startIcon={<Delete />}
+                        onClick={() => {
+                          setSelectedReport(report);
+                          setOpenDeleteModal(true);
+                        }}
+                      >
+                        Xóa {report.type === "POST" ? "bài viết" : "bình luận"}
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        startIcon={<Block />}
+                        onClick={() => handleBanAccount(report)}
+                      >
+                        Ban Tài Khoản
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={() => handleIgnoreReport(report.id)}
+                      >
+                        Bỏ qua
+                      </Button>
+                    </Box>
+                  </CustomCard>
+                ))}
+              <Pagination
+                count={totalReportPages}
+                page={currentReportPage}
+                onChange={(e, value) => setCurrentReportPage(value)}
                 color="primary"
-                onClick={() => setOpenDeleteModal(false)}
-              >
-                Hủy
-              </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={handleDeletePost}
-              >
-                Xóa
-              </Button>
+              />
             </Box>
-          </ModalBox>
-        </Modal>
-      </ContentContainer>
-    </BackgroundContainer>
+          )}
+
+          <Modal
+            open={openDeleteModal}
+            onClose={() => setOpenDeleteModal(false)}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <ModalBox>
+              <Typography variant="h6" color="gray" textAlign="center">
+                Xác nhận xóa bài viết
+              </Typography>
+              <Typography variant="body1" mt={2} mb={2}>
+                Bạn có chắc chắn muốn xóa bài viết này không?
+              </Typography>
+              <Box display="flex" justifyContent="space-around">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setOpenDeleteModal(false)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleDeletePost}
+                >
+                  Xóa
+                </Button>
+              </Box>
+            </ModalBox>
+          </Modal>
+        </ContentContainer>
+      </BackgroundContainer>
+    </>
   );
 };
 

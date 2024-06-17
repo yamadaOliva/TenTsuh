@@ -77,6 +77,17 @@ const createReport = (access_token, data) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
   return axios.post(`/report/create`, data);
 };
+
+const deletePostByAdmin = (access_token, postId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.delete(`/post/admin/delete/${postId}`);
+};
+
+const deleteCommentByAdmin = (access_token, commentId) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+  return axios.delete(`/post/comment/admin/delete/${commentId}`);
+};
+
 export {
   createPost,
   getPotsOfUser,
@@ -94,4 +105,6 @@ export {
   deletePost,
   deleteComment,
   createReport,
+  deletePostByAdmin,
+  deleteCommentByAdmin,
 };
