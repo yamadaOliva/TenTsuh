@@ -184,7 +184,7 @@ export default function Register() {
     const regexMail = /^[a-zA-Z]+(?:\.[a-zA-Z]+)*\d{6}@sis\.hust\.edu\.vn$/;
     const regexPhone = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
     if (!regexMail.test(email)) {
-      toast.error("Email không hợp lệ");
+      toast.error("Email không hợp l, phải có dạng @sis.hust.edu.vn");
       return false;
     }
     if (phone && !regexPhone.test(phone)) {
@@ -212,10 +212,14 @@ export default function Register() {
 
     let studentId1 = email.split("@")[0].split(".")[1].slice(2);
     if (studentId.slice(2) !== studentId1) {
-      toast.error("Mã sinh viên không khớp với email");
+      toast.error("Mã sinh viên không kshớp với email");
       return false;
     }
-
+    console.log(classCount == studentId.slice(0, 4));
+    if(studentId.slice(0,4) != classCount){
+      toast.error("Mã sinh viên không khớp năm nhập học");
+      return false;
+    }
     return true;
   };
   const handleSubmit = async (e) => {

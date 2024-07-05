@@ -199,6 +199,11 @@ const Post = ({ post, type, home, deletePostEvent }) => {
     };
 
     const submitReply = async () => {
+      if (!replyText.trim()) return;
+      if(replyText.length > 512) {
+        toast.error("Phản hồi không được quá 512 ký tự");
+        return;
+      }
       const res = await replyComment(me.accessToken, comment.id, replyText);
       if (res.EC !== 200) {
         toast.error(res.message);
@@ -393,6 +398,10 @@ const Post = ({ post, type, home, deletePostEvent }) => {
 
     const submitComment = async () => {
       if (!newComment.trim()) return;
+      if(newComment.length > 512) {
+        toast.error("Bình luận không được quá 512 ký tự");
+        return;
+      }
       const res = await commentPost(accessToken, postId, newComment);
       if (res.EC !== 200) {
         toast.error(res.message);
