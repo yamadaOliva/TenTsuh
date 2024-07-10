@@ -5,8 +5,8 @@ export const msalConfig = {
         clientId: "c589e5ca-2dd7-40d2-b982-0a13a93b691d",
         authority: "https://login.microsoftonline.com/organizations/vietanh872001gmail.onmicrosoft.com",
         // // login
-        redirectUrl:  "http://localhost:3000/login",
-        postLogoutRedirectUri: "http://localhost:3000/login",
+        redirectUrl:  "https://ten-tsuh.vercel.app/login",
+        postLogoutRedirectUri: "https://ten-tsuh.vercel.app/login",
         navigateToLoginRequestUrl: false,
     },
     cache: {
