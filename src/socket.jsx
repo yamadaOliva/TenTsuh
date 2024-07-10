@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
 
-const URL = "https://basenestjs-restful-production.up.railway.app";
+const URL = "http://localhost:8001/";
 
 export const socket = io(URL);

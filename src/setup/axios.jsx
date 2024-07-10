@@ -1,7 +1,7 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 const instance = axios.create({
-  baseURL: "https://basenestjs-restful-production.up.railway.app",
+  baseURL: "http://localhost:8080",
 });
 instance.defaults.withCredentials = true;
 instance.interceptors.response.use(
