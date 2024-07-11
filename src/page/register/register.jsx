@@ -20,6 +20,10 @@ import {
   FormControl,
   Select,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@material-ui/core";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -27,6 +31,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { address } from "../../utils";
 import dataJson from "../../assets/data/data.json";
+
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -91,7 +96,9 @@ export default function Register() {
   const [gender, setGender] = useState("Nam");
   const [birthday, setBirthday] = useState("");
   const [remember, setRemember] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const navigate = useNavigate();
+
   //useEffect
   useEffect(() => {
     const get = async () => {
@@ -184,7 +191,7 @@ export default function Register() {
     const regexMail = /^[a-zA-Z]+(?:\.[a-zA-Z]+)*\d{6}@sis\.hust\.edu\.vn$/;
     const regexPhone = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
     if (!regexMail.test(email)) {
-      toast.error("Email không hợp l, phải có dạng @sis.hust.edu.vn");
+      toast.error("Email không hợp lệ, phải có dạng @sis.hust.edu.vn");
       return false;
     }
     if (phone && !regexPhone.test(phone)) {
@@ -212,11 +219,10 @@ export default function Register() {
 
     let studentId1 = email.split("@")[0].split(".")[1].slice(2);
     if (studentId.slice(2) !== studentId1) {
-      toast.error("Mã sinh viên không kshớp với email");
+      toast.error("Mã sinh viên không khớp với email");
       return false;
     }
-    console.log(classCount == studentId.slice(0, 4));
-    if(studentId.slice(0,4) != classCount){
+    if (studentId.slice(0, 4) != classCount) {
       toast.error("Mã sinh viên không khớp năm nhập học");
       return false;
     }
@@ -257,6 +263,7 @@ export default function Register() {
       console.log(error);
     }
   };
+
   return (
     <>
       <section
@@ -282,14 +289,6 @@ export default function Register() {
               <Grid container spacing={2}>
                 <Grid xs={6} className="pr-4">
                   <Grid container spacing={2}>
-                    {/* <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Tên hiển thị"
-                      placeholder="Nhập họ"
-                      fullWidth
-                      required
-                    />
-                  </Grid> */}
                     <Grid item xs={12}>
                       <TextField
                         label="Mã sinh viên"
@@ -400,7 +399,17 @@ export default function Register() {
                             value={remember}
                           />
                         }
-                        label="Tôi đồng ý với điều khoản sử dụng"
+                        label={
+                          <span>
+                            Tôi đồng ý với{" "}
+                            <span
+                              onClick={() => setOpenDialog(true)}
+                              style={{ color: "blue", cursor: "pointer" }}
+                            >
+                              điều khoản sử dụng
+                            </span>
+                          </span>
+                        }
                         fullWidth
                         onChange={(e) => setRemember(e.target.value)}
                       />
@@ -624,6 +633,23 @@ export default function Register() {
           </Paper>
         </Grid>
       </section>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Điều khoản sử dụng</DialogTitle>
+        <DialogContent>
+          <ol>
+            <li>Không đăng tin giả</li>
+            <li>Không đăng tin bạo lực</li>
+            <li>Không xúc phạm người khác</li>
+            <li>Không buôn bán chất cấm vi phạm pháp luật</li>
+            <li>Không quấy rối người khác</li>
+          </ol>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)} color="primary">
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
