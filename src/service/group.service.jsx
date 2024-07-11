@@ -44,6 +44,11 @@ const rejectRequest = (accessToken, requestId) => {
   return axios.post(`/group/reject`, { requestId });
 };
 
+const findGroup = (accessToken, name) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+  return axios.get(`/group/search/${name}`);
+}
+
 export {
   createGroup,
   getGroup,
@@ -54,4 +59,5 @@ export {
   getRequests,
   acceptRequest,
   rejectRequest,
+  findGroup
 };

@@ -23,17 +23,18 @@ import {
   ListItemText,
   Divider,
 } from "@material-ui/core";
-import { GroupAdd, Group, ExitToApp, Search } from "@material-ui/icons";
+import { GroupAdd, Group, ExitToApp, Search, Refresh } from "@material-ui/icons";
 import Header from "../../component/Header/Header";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   createGroup,
   getGroup,
   getRecommendGroup,
   requestJoinGroup,
   leaveGroup,
+  findGroup
 } from "../../service/group.service";
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -73,23 +74,12 @@ const useStyles = makeStyles((theme) => ({
 const imageUrl =
   "https://play-lh.googleusercontent.com/uJxoDY7gP76P1vjAFfo1nGFZBYRGYtBDTxv0OrkP_4a1x7ZpO7gC5AF2xR6qj-WVefY=w240-h480-rw";
 
-const fakeGroups = [
-  { id: 1, name: "Nhóm 1", imageUrl },
-  { id: 2, name: "Nhóm 2", imageUrl },
-  { id: 3, name: "Nhóm 3", imageUrl },
-];
-
-const fakeMyGroups = [
-  { id: 1, name: "Nhóm của tôi 1", imageUrl },
-  { id: 2, name: "Nhóm của tôi 2", imageUrl },
-];
-
 export default function GroupPage() {
   const navigate = useNavigate();
   const me = useSelector((state) => state.user);
   const classes = useStyles();
-  const [groups, setGroups] = useState(fakeGroups);
-  const [myGroups, setMyGroups] = useState(fakeMyGroups);
+  const [groups, setGroups] = useState([]);
+  const [myGroups, setMyGroups] = useState([]);
   const [newGroupName, setNewGroupName] = useState("");
   const [openCreateGroupDialog, setOpenCreateGroupDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -119,42 +109,52 @@ export default function GroupPage() {
           socket.emit("notification", `user_${group.OwnerId}`);
         }
         if (group.id !== groupId) return group;
-        
-      }
-        );
+      });
       setGroups(newGroups);
-      
     } else {
       toast.error(res?.message);
     }
   };
 
-  const handleLeaveGroup = (groupId) => {
+  const handleLeaveGroup = async(groupId) => {
     console.log("Leaving group:", groupId);
     setMyGroups(myGroups.filter((group) => group.id !== groupId));
     setOpenLeaveDialog(false);
+    const res = await leaveGroup(me.accessToken, groupId);
+    if (res?.EC === 200) {
+      toast.success("Rời nhóm thành công");
+    } else {
+      toast.error(res?.message);
+    }
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     console.log("Searching for:", searchQuery);
-    // Implement search logic here
+    const res = await findGroup(me.accessToken, searchQuery);
+    if (res?.EC === 200) {
+      setGroups(res.data);
+    } else {
+      toast.error(res?.message);
+    }
   };
 
-  useEffect(() => {
+  const handleRefresh = async () => {
+    setSearchQuery("");
     const fetchGroups = async () => {
       const res = await getGroup(me.accessToken);
       const resRecommend = await getRecommendGroup(me.accessToken);
-      console.log("res", resRecommend.data);
       if (res?.EC === 200) {
-        console.log("Groups:", res.data);
         setMyGroups(res.data);
       }
       if (resRecommend?.EC === 200) {
-        console.log("Recommend groups:", resRecommend.data);
         setGroups(resRecommend.data);
       }
     };
     fetchGroups();
+  };
+
+  useEffect(() => {
+    handleRefresh();
   }, []);
 
   return (
@@ -198,15 +198,24 @@ export default function GroupPage() {
                   variant="contained"
                   color="primary"
                   onClick={handleSearch}
+                  style={{ marginRight: "8px" }}
                 >
                   Tìm kiếm
+                </Button>
+                <Button
+                  variant="contained"
+                  color="default"
+                  startIcon={<Refresh />}
+                  onClick={handleRefresh}
+                >
+                  Làm mới
                 </Button>
               </Box>
               <Typography variant="h5" gutterBottom>
                 Nhóm có thể tham gia
               </Typography>
               <Grid container spacing={3}>
-                {groups.map((group) => (
+                {groups?.map((group) => (
                   <Grid item xs={12} sm={6} md={4} key={group.id}>
                     <Card className={classes.groupCard}>
                       <CardMedia

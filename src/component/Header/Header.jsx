@@ -299,15 +299,7 @@ export default function Header() {
         >
           TenTsuh
         </Typography>
-        <Search>
-          <SearchIconWrapper>
-            <SearchIcon />
-          </SearchIconWrapper>
-          <StyledInputBase
-            placeholder="Tìm kiếm trên TenTsuh..."
-            inputProps={{ "aria-label": "search" }}
-          />
-        </Search>
+        
         <Box sx={{ flexGrow: 1 }} />
         <Box sx={{ display: { xs: "none", md: "flex" } }}>
           <Typography variant="body1" sx={{ margin: 2 }}>
